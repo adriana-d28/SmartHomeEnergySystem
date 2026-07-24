@@ -1,0 +1,148 @@
+// Battery Storage Service
+// Smart Home Energy Management System
+// @author Adriana Dinelly - ID 25165771
+// ------------------------------------------------------------------------------------------------
+//
+// This service is responsible for managing the home's battery storage.
+//
+// Responsibilities:
+//   1. Provide the current battery status.
+//   2. Continuously monitor the battery through a bidirectional stream.
+//   3. Receive commands from the GUI while simultaneously sending battery updates back to the client.
+//
+// Internally, this service communicates with the Solar Panel Service
+// to obtain the latest production values before updating the battery level.
+//
+// ------------------------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+// Defines the package inside the Protocol Buffers specification.
+package battery;
+
+// Defines the Java package for the generated classes.
+option java_package = "com.smarthome.battery";
+
+// Generates multiple Java classes.
+option java_multiple_files = true;
+
+// Name of the outer generated Java class.
+option java_outer_classname = "BatteryStorageProto";
+
+
+// ============== Battery Storage Service Definition ==============
+
+service BatteryStorageService {
+
+// Unary RPC.
+// Returns the current battery status.
+
+  rpc GetBatteryStatus(GetBatteryStatusRequest)returns (BatteryStatusInfo);
+
+// Bidirectional Streaming RPC.
+// The client and the server exchange messages independently.
+// The GUI may send commands at any moment while the server continuously streams battery updates.
+
+  rpc MonitorBatteryStatus(stream BatteryMonitoringRequest) returns (stream BatteryMonitoringResponse);
+
+}
+
+// ============== Enumerations ==============
+
+// This one represents the current charging state of the battery.
+
+enum ChargingStatus {
+
+  UNKNOWN = 0;
+  CHARGING = 1;
+  DISCHARGING = 2;
+  FULL = 3;
+  LOW = 4;
+
+}
+
+// This one represents the battery operating mode.
+
+enum BatteryMode {
+
+  NORMAL = 0;
+  ECO = 1;
+  PERFORMANCE = 2;
+
+}
+
+// Commands sent by the GUI during the monitoring session.
+
+enum BatteryCommand {
+
+  START = 0;
+  CHANGE_MODE = 1;
+  STOP = 2;
+
+}
+
+
+// ============== Request Messages ==============
+
+// Request used by the Unary RPC.
+
+message GetBatteryStatusRequest {
+
+  // Unique battery identifier.
+  string batteryId = 1;
+
+}
+
+
+// Messages are continuously sent by the GUI while monitoring.
+
+message BatteryMonitoringRequest {
+
+  // Sends which battery is being monitored.
+  string batteryId = 1;
+
+  // Command issued by the GUI.
+  BatteryCommand command = 2;
+
+  // Operating mode selected by the user.
+  // This field is mainly used together with CHANGE_MODE.
+  BatteryMode mode = 3;
+
+}
+
+// ============== Response Messages ==============
+
+// This message represents the current battery information.
+// It is reused whenever battery status information needs to be returned.
+
+message BatteryStatusInfo {
+
+  // Battery identifier.
+  string batteryId = 1;
+
+  // Current battery level (percentage).
+  int32 batteryLevel = 2;
+
+  // Current charging status.
+  ChargingStatus chargingStatus = 3;
+
+  // Current operating mode.
+  BatteryMode currentMode = 4;
+
+}
+
+
+// Response continuously streamed by the Battery Service.
+
+message BatteryMonitoringResponse {
+
+  // Current battery information.
+  BatteryStatusInfo batteryInfo = 1;
+
+  // Estimated remaining charging/discharging time.
+  string estimatedTimeRemaining = 2;
+
+  // Informational message describing the latest battery event (e.g. "Battery fully charged").
+  string message = 3;
+
+}
