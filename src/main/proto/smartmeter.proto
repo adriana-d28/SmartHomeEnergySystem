@@ -1,0 +1,109 @@
+// Smart Meter Service
+// Smart Home Energy Management System
+// @author Adriana Dinelly - ID 25165771
+// -----------------------------------------------------------------------------------------
+//
+// This service acts as the intelligent monitoring component of the system.
+//
+// Responsibilities:
+//   1. Collect information from the Solar Panel Service.
+//   2. Collect information from the Battery Storage Service.
+//   3. Generate energy reports.
+//   4. Calculate statistics and recommendations.
+//   5. Process appliance consumption uploaded by the GUI.
+//
+// -----------------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+// Defines the package inside the Protocol Buffers specification.
+package smartmeter;
+
+// Defines the Java package where the generated classes will be created.
+option java_package = "com.smarthome.smartmeter";
+
+// Generates multiple Java classes.
+option java_multiple_files = true;
+
+// Name of the outer generated Java class.
+option java_outer_classname = "SmartMeterProto";
+
+
+// =============== Smart Meter Service Definition ===============
+
+service SmartMeterService {
+
+   // Server Streaming RPC.
+   // Generates an energy report.
+   // The client sends one request and the server streams
+   // multiple report sections containing different information, until the report is complete.
+
+  rpc GenerateEnergyReport(GenerateEnergyReportRequest) returns (stream ReportEntry);
+
+   // Client Streaming RPC.
+   // The client uploads multiple appliance consumption readings.
+   // After receiving all readings, the server calculates consumption statistics and returns a single summary.
+
+  rpc UploadConsumptionReadings(stream ConsumptionReading)returns (ConsumptionSummary);
+
+}
+
+// =============== Request Messages ===============
+
+// Request used to generate an energy report.
+
+message GenerateEnergyReportRequest {
+
+  // Unique identifier of the house.
+  string houseId = 1;
+
+}
+
+// =============== Shared Messages ===============
+
+// Represents one section of the generated report.
+// Each streamed message contains one piece of information, allowing the client to display the report progressively.
+
+message ReportEntry {
+
+  // Name of the report section (e.g. Daily Production, Energy Efficiency, Recommendation etc)
+  string section = 1;
+
+  // Value associated with the section (e.g. 24.kWh, 74%, Charging etc).
+  string value = 2;
+
+  // Additional explanation shown to the user (e.g. "Reduce unnecessary consumption during peak hours.").
+  string description = 3;
+
+}
+
+// This one represents the consumption of one appliance.
+// This message is repeatedly sent by the client during the Client Streaming RPC.
+
+message ConsumptionReading {
+
+  // Name of the appliance.
+  string device = 1;
+
+  // Power consumption in watts.
+  int32 consumption = 2;
+
+}
+
+// Final response returned after all appliance readings have been processed.
+
+message ConsumptionSummary {
+
+  // Appliance with the highest energy consumption.
+  string highestConsumer = 1;
+
+  // Consumption of the highest consumer.
+  int32 highestConsumption = 2;
+
+  // Total energy consumption of all uploaded appliances.
+  int32 totalConsumption = 3;
+
+  // Average consumption considering all uploaded appliances.
+  double averageConsumption = 4;
+
+}
