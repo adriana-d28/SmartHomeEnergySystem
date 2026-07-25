@@ -47,7 +47,7 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
         // Update the timestamp to represent the current measurement time.
         solarData.setTimestamp(LocalDateTime.now());
         
-        // Create the response message using the Builder pattern: sets the data, format and build.
+        // Create the response message using the Builder pattern: sets the data, the format and build.
         ProductionInfo response = ProductionInfo.newBuilder().setPanelId(solarData.getPanelId())
                 .setCurrentProduction(solarData.getCurrentProduction()).setUnit(solarData.getUnit()).setTimestamp(
                 solarData.getTimestamp().format(FORMATTER)).build();
