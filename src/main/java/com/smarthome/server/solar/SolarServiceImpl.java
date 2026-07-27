@@ -7,6 +7,7 @@ package com.smarthome.server.solar;
 import com.smarthome.solar.GetCurrentProductionRequest;
 import com.smarthome.solar.ProductionInfo;
 import com.smarthome.solar.SolarPanelServiceGrpc;
+import com.smarthome.solar.MonitorProductionRequest;
 
 import io.grpc.stub.StreamObserver;
 
@@ -38,9 +39,10 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
     // ===== Methods Development =====
 
     /**
+     * ======== UNARY RPC METHOD =========
+     * 
      * Handles Unary requests that retrieve the current production of the solar panel.
-     * @param request Request received from the client.
-     * @param responseObserver Used to send the response back to the client.
+     * 
      */
     @Override
     public void getCurrentProduction(GetCurrentProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
@@ -57,5 +59,46 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
         // Finish and close the RPC call.
         responseObserver.onCompleted();
 
+    }
+    
+     /**
+     * ======== SERVER STREAMING METHOD =========
+     * 
+     * Handles Server Streaming requests that continuously send updated solar production values to the client.
+     *
+     */
+    @Override
+    public void monitorProduction(MonitorProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
+        
+        try {
+            // Send five production updates - simple version for tests.
+            for (int i = 0; i < 5; i++) {
+                // Simulate a small production variation.
+                double newProduction = solarData.getCurrentProduction() + 0.2;
+
+                solarData.setCurrentProduction(newProduction);
+                solarData.setTimestamp(LocalDateTime.now());
+
+                // Create the response message.
+                ProductionInfo response = ProductionInfo.newBuilder().setPanelId(solarData.getPanelId())
+                        .setCurrentProduction(solarData.getCurrentProduction()).setUnit(solarData.getUnit())
+                        .setTimestamp(solarData.getTimestamp().format(FORMATTER)).build();
+
+                // Send the current production to the client.
+                responseObserver.onNext(response);
+                // Wait two seconds before sending the next update.
+                Thread.sleep(2000);
+            }
+
+            // Finish the stream.
+            responseObserver.onCompleted();
+
+        } catch (InterruptedException e) {
+
+            // Restore the interrupted status.
+            Thread.currentThread().interrupt();
+            // Notify the client about the error.
+            responseObserver.onError(e);
+        }
     }
 }

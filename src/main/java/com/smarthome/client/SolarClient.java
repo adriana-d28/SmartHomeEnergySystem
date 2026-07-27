@@ -7,6 +7,8 @@ package com.smarthome.client;
 import com.smarthome.solar.GetCurrentProductionRequest;
 import com.smarthome.solar.ProductionInfo;
 import com.smarthome.solar.SolarPanelServiceGrpc;
+import com.smarthome.solar.MonitorProductionRequest;
+import java.util.Iterator;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -32,6 +34,8 @@ public class SolarClient {
         // Create the Blocking Stub and pass channel as argument.
         SolarPanelServiceGrpc.SolarPanelServiceBlockingStub stub = SolarPanelServiceGrpc.newBlockingStub(channel);
 
+        // ========= UNARY TEST ============
+        
         // Create the request.
         GetCurrentProductionRequest request = GetCurrentProductionRequest.newBuilder().setPanelId("SP-001").build();
 
@@ -44,6 +48,27 @@ public class SolarClient {
         System.out.println("Current Production: " + response.getCurrentProduction());
         System.out.println("Unit: " + response.getUnit());
         System.out.println("Timestamp: " + response.getTimestamp());
+        
+        // ========= SERVER STREAMING TEST ==========
+        
+        // Create the monitoring request.
+        MonitorProductionRequest monitorRequest = MonitorProductionRequest.newBuilder().setPanelId("SP-001").build();
+
+        // Call the Server Streaming RPC.
+        Iterator<ProductionInfo> productionUpdates = stub.monitorProduction(monitorRequest);
+
+        System.out.println("\n----- Monitoring Solar Production -----");
+
+        // Read each update sent by the server.
+        while (productionUpdates.hasNext()) {
+            ProductionInfo production = productionUpdates.next();
+
+            System.out.println("------------------------------");
+            System.out.println("Panel ID: " + production.getPanelId());
+            System.out.println("Current Production: " + production.getCurrentProduction());
+            System.out.println("Unit: " + production.getUnit());
+            System.out.println("Timestamp: " + production.getTimestamp());
+        }
 
         // Close the communication channel.
         channel.shutdown();

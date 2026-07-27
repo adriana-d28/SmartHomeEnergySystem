@@ -53,12 +53,9 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
         );
     }
 
-    /**
-     * Generates an energy report using Server Streaming.
-     *
-     * One request is received, and multiple ReportEntry messages are streamed back to the client.
-     * 
-     */
+
+    // ======== Server Streaming method implementation ===========
+    // One request is received, and multiple ReportEntry messages are streamed back to the client, generating the energy report.
     @Override
     public void generateEnergyReport(GenerateEnergyReportRequest request, StreamObserver<ReportEntry> responseObserver) {
         // Future validation:
@@ -101,12 +98,7 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
         return ReportEntry.newBuilder().setSection(section).setValue(value).setDescription(description).build();
     }
 
-    /**
-     * Future implementation.
-     *
-     * Client Streaming will be implemented in the next phase of the project.
-     * 
-     */
+    // ======== Client Streaming method implementation ========
     @Override
     public StreamObserver<ConsumptionReading> uploadConsumptionReadings(StreamObserver<ConsumptionSummary> responseObserver) {
         
@@ -169,6 +161,7 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
             responseObserver.onNext(summary);
             // Communicates the end of the response
             responseObserver.onCompleted();
+            
             }
         };
     }
