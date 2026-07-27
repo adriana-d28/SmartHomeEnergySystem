@@ -11,9 +11,13 @@ import com.smarthome.smartmeter.ConsumptionSummary;
 import com.smarthome.smartmeter.GenerateEnergyReportRequest;
 import com.smarthome.smartmeter.ReportEntry;
 import com.smarthome.smartmeter.SmartMeterServiceGrpc;
+import com.smarthome.integrationclient.SolarGrpcClient;
+import com.smarthome.integrationclient.BatteryGrpcClient;
+
+import com.smarthome.solar.ProductionInfo;
+import com.smarthome.battery.BatteryStatusInfo;
 
 import java.util.ArrayList;
-
 import io.grpc.stub.StreamObserver;
 /**
  *
@@ -25,6 +29,10 @@ import io.grpc.stub.StreamObserver;
 public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServiceImplBase {
     // Stores the current internal state of the Smart Meter.
     private final SmartMeterData smartMeterData;
+    
+    // Internal clients used to communicate with other services.
+    private final SolarGrpcClient solarClient;
+    private final BatteryGrpcClient batteryClient;
 
     /**
      * This constructor creates the service with sample data.
@@ -49,15 +57,41 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
                 1400,
                 // Energy Analysis
                 91.4,
-                "Reduce energy usage during peak hours."
+                "Reduce energy usage during peak hours."               
         );
+        
+        solarClient = new SolarGrpcClient();
+        batteryClient = new BatteryGrpcClient();
     }
 
+    // ============ METHODS DEVELOPMENT ============
+    
+    // Updates the Smart Meter information using the Solar and Battery services.
+    private void updateSmartMeterData() {
+
+        // Request the current solar production.
+        ProductionInfo production = solarClient.getCurrentProduction();
+        // Request the current battery status.
+        BatteryStatusInfo battery = batteryClient.getBatteryStatus();
+
+        // Update the Smart Meter internal state.
+        smartMeterData.setCurrentSolarProduction(production.getCurrentProduction());
+        smartMeterData.setProductionUnit(production.getUnit());
+
+        smartMeterData.setBatteryLevel(battery.getBatteryLevel());
+        smartMeterData.setChargingStatus(battery.getChargingStatus());
+        smartMeterData.setBatteryMode(battery.getCurrentMode());
+    }
+    
 
     // ======== Server Streaming method implementation ===========
     // One request is received, and multiple ReportEntry messages are streamed back to the client, generating the energy report.
     @Override
     public void generateEnergyReport(GenerateEnergyReportRequest request, StreamObserver<ReportEntry> responseObserver) {
+        
+        // Calling the method to update the Smart Meter based on information gotten from Solar and Battery Services
+        updateSmartMeterData();
+        
         // Future validation:
         // In future versions, the Smart Meter will validate if the requested house exists before generating the report.
         String requestedHouse = request.getHouseId();

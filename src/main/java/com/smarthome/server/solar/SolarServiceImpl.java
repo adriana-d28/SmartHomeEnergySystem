@@ -46,6 +46,8 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
      */
     @Override
     public void getCurrentProduction(GetCurrentProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
+        // test log - remove it
+        System.out.println("Solar Service received a request from another service.");
         // Update the timestamp to represent the current measurement time.
         solarData.setTimestamp(LocalDateTime.now());
         

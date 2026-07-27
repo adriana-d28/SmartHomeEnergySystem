@@ -12,6 +12,8 @@ import com.smarthome.battery.GetBatteryStatusRequest;
 import com.smarthome.battery.BatteryCommand;
 import com.smarthome.battery.BatteryMonitoringRequest;
 import com.smarthome.battery.BatteryMonitoringResponse;
+import com.smarthome.integrationclient.SolarGrpcClient;
+import com.smarthome.solar.ProductionInfo;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -24,13 +26,31 @@ import io.grpc.stub.StreamObserver;
 public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorageServiceImplBase {
     // Create a battery internal state instance
     private final BatteryData batteryData;
+    // Internal client used to communicate with the Solar Service.
+    private final SolarGrpcClient solarClient;
     // Constructor - after creating the service, the server initializes a standard state of the battery
     public BatteryServiceImpl() {
         batteryData = new BatteryData("BAT001", 75, ChargingStatus.CHARGING, BatteryMode.NORMAL);
+            // Create the internal client used to communicate with the Solar Service.
+            solarClient = new SolarGrpcClient();
     }
 
     // ======= Methods Development =======
     
+    /**
+    * Updates the battery status based on the current solar production.
+    */
+    private void updateBatteryStatus() {
+        
+        // Request the current solar production.
+        ProductionInfo production = solarClient.getCurrentProduction();
+        // Update the charging status according to the current production.
+        if (production.getCurrentProduction() >= 5.0) {
+            batteryData.setChargingStatus(ChargingStatus.CHARGING);
+        } else {
+            batteryData.setChargingStatus(ChargingStatus.DISCHARGING);
+        }
+    }    
     
     /**
      * ======= UNARY METHOD ========
@@ -40,7 +60,10 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
      */
     @Override
     public void getBatteryStatus(GetBatteryStatusRequest request, StreamObserver<BatteryStatusInfo> responseObserver) {
-        
+        // test log - remove it
+        System.out.println("Battery Service received a request from another service.");
+        // Call the method to update the battery status according to the Solar Panel information
+        updateBatteryStatus();
         // Create the response message using the Builder pattern: sets the data, the format and build.
         BatteryStatusInfo response = BatteryStatusInfo.newBuilder().setBatteryId(batteryData.getBatteryId())
                 .setBatteryLevel(batteryData.getBatteryLevel()).setChargingStatus(batteryData.getChargingStatus())
@@ -67,6 +90,9 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
 
             @Override
             public void onNext(BatteryMonitoringRequest request) {
+                // Call the method to update the battery status according to the Solar Panel information
+                updateBatteryStatus();
+                
                 String message;
                 // Process the command received from the client.
                 switch (request.getCommand()) {
@@ -96,11 +122,6 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
 
                 // Send the response.
                 responseObserver.onNext(response);
-
-                // Finish the monitoring session when STOP is received.
-                if (request.getCommand() == BatteryCommand.STOP) {
-                    responseObserver.onCompleted();
-                }
             }
 
             @Override
