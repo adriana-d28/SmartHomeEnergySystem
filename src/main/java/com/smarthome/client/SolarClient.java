@@ -9,27 +9,31 @@ import com.smarthome.solar.ProductionInfo;
 import com.smarthome.solar.SolarPanelServiceGrpc;
 import com.smarthome.solar.MonitorProductionRequest;
 import java.util.Iterator;
+import java.io.IOException;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import javax.jmdns.ServiceInfo;
+import com.smarthome.discovery.JmDNSDiscovery;
+
 /**
  *
- * @author Adriana
+ * @author Adriana Dinelly - ID 25165771
+ * 
  * Simple client used to test the Solar Panel gRPC service.
  */
 public class SolarClient {
-    // Server address.
-    private static final String HOST = "localhost";
-
-    // Server port.
-    private static final int PORT = 50051;
 
     // Main Method
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+        JmDNSDiscovery discovery = new JmDNSDiscovery();
+
+        ServiceInfo serviceInfo = discovery.discoverService("SolarService");
 
         // Create the communication channel.
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(HOST, PORT).usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0],serviceInfo.getPort()).usePlaintext().build();
 
         // Create the Blocking Stub and pass channel as argument.
         SolarPanelServiceGrpc.SolarPanelServiceBlockingStub stub = SolarPanelServiceGrpc.newBlockingStub(channel);
@@ -70,7 +74,8 @@ public class SolarClient {
             System.out.println("Timestamp: " + production.getTimestamp());
         }
 
-        // Close the communication channel.
+        // Close the communication and discovery channel.
         channel.shutdown();
+        discovery.close();
     }
 }

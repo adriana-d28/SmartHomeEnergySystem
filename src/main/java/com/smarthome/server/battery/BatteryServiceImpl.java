@@ -16,6 +16,8 @@ import com.smarthome.integrationclient.SolarGrpcClient;
 import com.smarthome.solar.ProductionInfo;
 import io.grpc.stub.StreamObserver;
 
+
+
 /**
  *
  * @author Adriana Dinelly - ID 25165771

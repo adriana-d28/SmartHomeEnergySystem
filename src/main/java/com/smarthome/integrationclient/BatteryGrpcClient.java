@@ -10,6 +10,10 @@ import com.smarthome.battery.GetBatteryStatusRequest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.io.IOException;
+
+import javax.jmdns.ServiceInfo;
+import com.smarthome.discovery.JmDNSDiscovery;
 
 /**
  *
@@ -19,28 +23,52 @@ import io.grpc.ManagedChannelBuilder;
  *
  */
 public class BatteryGrpcClient {
-
-    // Battery Service address and port.
-    private static final String HOST = "localhost";
-    private static final int PORT = 50052;
     
     // Communication channel with the Battery Service.
-    private final ManagedChannel channel;
+    private ManagedChannel channel;
     // Blocking Stub used to invoke Unary RPCs.
-    private final BatteryStorageServiceGrpc.BatteryStorageServiceBlockingStub stub;
+    private BatteryStorageServiceGrpc.BatteryStorageServiceBlockingStub stub;
 
-    // Creates the communication channel and initializes the gRPC stub.
+    // Constructor
     public BatteryGrpcClient() {
+        
+    }
+    
+    // This method discover the Battery Service and create the communication channel
+    private void connect() {
+        
+        if (stub != null) {
+            return;
+        }
+        
+        try {
 
-        // Create the communication channel.
-        channel = ManagedChannelBuilder.forAddress(HOST, PORT).usePlaintext().build();
+            // Create the discovery jmDNS instance.
+            JmDNSDiscovery discovery = new JmDNSDiscovery();
 
-        // Create the Blocking Stub.
-        stub = BatteryStorageServiceGrpc.newBlockingStub(channel);
+            // Discover the Solar Service.
+            ServiceInfo serviceInfo = discovery.discoverService("BatteryService");
+
+            // Close the discovery instance.
+            discovery.close();
+
+            // Create the communication channel.
+            channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
+
+            // Create the Blocking Stub.
+            stub = BatteryStorageServiceGrpc.newBlockingStub(channel);
+            
+        } catch (IOException e) {
+            
+            throw new RuntimeException("Unable to discover the Battery Service.", e);
+        }
     }
 
     // This method retrieves the current battery status from the Battery Service.
     public BatteryStatusInfo getBatteryStatus() {
+        
+        // Call the method to connect to the Solar service
+        connect();
 
         // Create the request.
         GetBatteryStatusRequest request = GetBatteryStatusRequest.newBuilder().setBatteryId("BAT001").build();

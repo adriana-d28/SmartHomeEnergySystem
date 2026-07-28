@@ -8,6 +8,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
+import com.smarthome.discovery.JmDNSRegistration;
 
 /**
  *
@@ -26,9 +27,26 @@ public class SmartMeterServer {
     // We create a server instance, start it and keep it running by calling the methods
     public static void main(String[] args) throws IOException, InterruptedException {
         
-        SmartMeterServer server = new SmartMeterServer();
-        server.start();
-        server.server.awaitTermination();
+        // Registration object used to publish the service on the local network.
+        JmDNSRegistration registration = null;
+        
+        try {
+        
+            SmartMeterServer server = new SmartMeterServer();
+            server.start();
+            
+             // Create an instance of the register
+            registration = new JmDNSRegistration();
+            // Register the service
+            registration.registerService("SmartMeterService", PORT, "Smart Meter Service");
+            
+            server.server.awaitTermination();
+        
+        } catch (IOException e) {
+            
+            System.err.println("Error starting Smart Meter Service: " + e.getMessage());
+            throw e;
+        }
     }
 
     // This small method creates and starts the gRPC server.

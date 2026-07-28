@@ -10,28 +10,30 @@ import com.smarthome.smartmeter.SmartMeterServiceGrpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import java.io.IOException;
 
 import java.util.Iterator;
+import javax.jmdns.ServiceInfo;
+import com.smarthome.discovery.JmDNSDiscovery;
 
 /**
  *
  * @author Adriana Dinelly - ID 25165771
  * 
- * This class is used to communicate with the other services. Simple Smart Meter Client for tests
+ * Simple client used to test the Smart Meter gRPC service.
  * 
  */
 public class SmartMeterClient {
-    // Server address.
-    private static final String HOST = "localhost";
-
-    // Server port.
-    private static final int PORT = 50053;
 
     // Main Method
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+JmDNSDiscovery discovery = new JmDNSDiscovery();
+
+        ServiceInfo serviceInfo = discovery.discoverService("SmartMeterService");
 
         // Create the communication channel.
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(HOST, PORT).usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0],serviceInfo.getPort()).usePlaintext().build();
         
         // Creates a blocking stub.
         SmartMeterServiceGrpc.SmartMeterServiceBlockingStub stub = SmartMeterServiceGrpc.newBlockingStub(channel);
@@ -55,7 +57,8 @@ public class SmartMeterClient {
             System.out.println("Value: " + report.getValue());
             System.out.println("Description: " + report.getDescription());
         }
-        // Closes the communication channel.
+        // Closes the communication and discovery channel.
         channel.shutdown();
+        discovery.close();
     }     
 }

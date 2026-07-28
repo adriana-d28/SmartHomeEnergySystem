@@ -8,6 +8,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
+import com.smarthome.discovery.JmDNSRegistration;
 
 /**
  *
@@ -27,9 +28,26 @@ public class BatteryServer {
     // We create a server instance, start it and keep it running by calling the methods
     public static void main(String[] args) throws IOException, InterruptedException {
         
-        BatteryServer server = new BatteryServer();
-        server.start();
-        server.server.awaitTermination();
+        // Registration object used to publish the service on the local network.
+        JmDNSRegistration registration = null;
+        
+        try {
+            
+            BatteryServer server = new BatteryServer();
+            server.start();
+            
+            // Create an instance of the register
+            registration = new JmDNSRegistration();
+            // Register the service
+            registration.registerService("BatteryService", PORT, "Battery Storage Service");
+            
+            server.server.awaitTermination();
+        
+        } catch (IOException e) {
+            
+            System.err.println("Error starting Battery Service: " + e.getMessage());
+            throw e;
+        }
     }
 
     // This small method creates and starts the gRPC server.

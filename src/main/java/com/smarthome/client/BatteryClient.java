@@ -11,30 +11,33 @@ import com.smarthome.battery.BatteryCommand;
 import com.smarthome.battery.BatteryMode;
 import com.smarthome.battery.BatteryMonitoringRequest;
 import com.smarthome.battery.BatteryMonitoringResponse;
+import java.io.IOException;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.jmdns.ServiceInfo;
+import com.smarthome.discovery.JmDNSDiscovery;
+
 /**
  *
  * @author Adriana Dinelly - ID 25165771
  * 
- * This class is used to communicate with the other services. Test client.
+ * Simple client used to test the Battery Storage gRPC service.
  * 
  */
 public class BatteryClient {
-    // Server address.
-    private static final String HOST = "localhost";
-
-    // Server port.
-    private static final int PORT = 50052;
 
     // Main Method
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+        JmDNSDiscovery discovery = new JmDNSDiscovery();
+
+        ServiceInfo serviceInfo = discovery.discoverService("BatteryService");
 
         // Create the communication channel.
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(HOST, PORT).usePlaintext().build();
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0],serviceInfo.getPort()).usePlaintext().build();
 
         // ======== UNARY TEST ==========
         
@@ -108,7 +111,8 @@ public class BatteryClient {
             Thread.currentThread().interrupt();
         }
         
-        // Close the communication channel.
+        // Close the communication and discovery channel.
         channel.shutdown();
+        discovery.close();
     }
 }
