@@ -11,8 +11,10 @@ import com.smarthome.solar.MonitorProductionRequest;
 
 import io.grpc.stub.StreamObserver;
 
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import io.grpc.Context;
 
 /**
  *
@@ -30,6 +32,9 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
 
     // Represents the current state of the solar panel.
     private final SolarData solarData;
+    
+    // Formatter to format the output
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#0.00");
 
     // Constructor - creates the service and initializes the solar panel with sample data.
     public SolarServiceImpl() {
@@ -75,8 +80,18 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
         try {
             // Send five production updates - simple version for tests.
             for (int i = 0; i < 5; i++) {
+                
+                // Stop the stream if the client has cancelled the RPC.
+                if (Context.current().isCancelled()) {
+                    System.out.println("Production monitoring cancelled by the client.");
+                    return;
+                }
+                
                 // Simulate a small production variation.
                 double newProduction = solarData.getCurrentProduction() + 0.2;
+                
+                // Round the value to two decimal places.
+                newProduction = Double.parseDouble(DECIMAL_FORMAT.format(newProduction));
 
                 solarData.setCurrentProduction(newProduction);
                 solarData.setTimestamp(LocalDateTime.now());

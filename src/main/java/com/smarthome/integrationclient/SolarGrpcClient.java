@@ -14,6 +14,9 @@ import java.io.IOException;
 
 import javax.jmdns.ServiceInfo;
 import com.smarthome.discovery.JmDNSDiscovery;
+import com.smarthome.solar.MonitorProductionRequest;
+import io.grpc.stub.StreamObserver;
+import io.grpc.Context;
 
 /**
  *
@@ -29,6 +32,10 @@ public class SolarGrpcClient {
     private ManagedChannel channel;
     // Blocking Stub used to invoke Unary RPCs.
     private SolarPanelServiceGrpc.SolarPanelServiceBlockingStub stub;
+    // Asynchronous Stub used to invoke Server Streaming RPCs.
+    private SolarPanelServiceGrpc.SolarPanelServiceStub asyncStub;
+    // Cancellable context used to stop the monitoring stream.
+private Context.CancellableContext monitoringContext;
 
     // Constructor 
     public SolarGrpcClient() {
@@ -56,8 +63,9 @@ public class SolarGrpcClient {
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
 
-            // Create the Blocking Stub.
+            // Create the Blocking and Async Stub.
             stub = SolarPanelServiceGrpc.newBlockingStub(channel);
+            asyncStub = SolarPanelServiceGrpc.newStub(channel);
             
         } catch (IOException e) {
             
@@ -66,19 +74,57 @@ public class SolarGrpcClient {
     }
 
     // This method retrieves the current production from the Solar Service.
-    public ProductionInfo getCurrentProduction() {
+    public ProductionInfo getCurrentProduction(String panelId) {
         
         // Call the method to connect to the Solar service
         connect();
 
         // Create the request.
-        GetCurrentProductionRequest request = GetCurrentProductionRequest.newBuilder().setPanelId("SP-001").build();
+        GetCurrentProductionRequest request = GetCurrentProductionRequest.newBuilder().setPanelId(panelId).build();
         // Invoke the Unary RPC.
         return stub.getCurrentProduction(request);
     }
+    
+    // This method starts the production monitoring stream.
+    public void monitorProduction(String panelId, StreamObserver<ProductionInfo> responseObserver) {
 
-    // Closes the communication channel (it allows the other services to close the communication channel)
+        // Connect to the Solar Service if necessary.
+        connect();
+        
+        // Cancel any previous monitoring session.
+        if (monitoringContext != null) {
+            monitoringContext.cancel(null);
+        }
+
+        // Create a new cancellable context.
+        monitoringContext = Context.current().withCancellation();
+
+        // Create the request.
+        MonitorProductionRequest request = MonitorProductionRequest.newBuilder().setPanelId(panelId).build();
+
+        // Invoke the Server Streaming RPC inside the cancellable context.
+        monitoringContext.run(() -> asyncStub.monitorProduction(request, responseObserver));
+    }
+    
+
+    // Helper method to stop the current production monitoring stream.
+    public void stopMonitoring() {
+
+        // Cancel the monitoring context if it exists.
+        if (monitoringContext != null) {
+            monitoringContext.cancel(null);
+            monitoringContext = null;
+        }
+    }
+
+    // Closes the communication channel (this independent method allows the other services to close the communication channel)
     public void shutdown() {
-        channel.shutdown();
+        // Stop any active monitoring stream.
+        stopMonitoring();
+
+        // Shutdown the communication channel.
+        if (channel != null) {
+            channel.shutdown();
+        }
     }
 }

@@ -70,7 +70,7 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
     private void updateSmartMeterData() {
 
         // Request the current solar production.
-        ProductionInfo production = solarClient.getCurrentProduction();
+        ProductionInfo production = solarClient.getCurrentProduction("SP-001");
         // Request the current battery status.
         BatteryStatusInfo battery = batteryClient.getBatteryStatus();
 

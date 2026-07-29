@@ -45,7 +45,7 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
     private void updateBatteryStatus() {
         
         // Request the current solar production.
-        ProductionInfo production = solarClient.getCurrentProduction();
+        ProductionInfo production = solarClient.getCurrentProduction("SP-001");
         // Update the charging status according to the current production.
         if (production.getCurrentProduction() >= 5.0) {
             batteryData.setChargingStatus(ChargingStatus.CHARGING);
