@@ -43,10 +43,10 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
         smartMeterData = new SmartMeterData(
                 // Basic Information
                 "HOUSE001",
-                // Solar Information (Future Integration)
+                // Solar Information
                 24.8,
                 "kWh",
-                // Battery Information (Future Integration)
+                // Battery Information
                 82,
                 ChargingStatus.CHARGING,
                 BatteryMode.NORMAL,
@@ -56,8 +56,8 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
                 "Air Conditioner",
                 1400,
                 // Energy Analysis
-                91.4,
-                "Reduce energy usage during peak hours."               
+                0,
+                "Waiting for analysis..."               
         );
         
         solarClient = new SolarGrpcClient();
@@ -81,10 +81,78 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
         smartMeterData.setBatteryLevel(battery.getBatteryLevel());
         smartMeterData.setChargingStatus(battery.getChargingStatus());
         smartMeterData.setBatteryMode(battery.getCurrentMode());
+        
+        // Calculate the current energy efficiency.
+        smartMeterData.setEnergyEfficiency(calculateEnergyEfficiency());
+
+        // Generate a recommendation based on the current house status.
+        smartMeterData.setRecommendation(generateRecommendation());
     }
     
+    /**
+     * Calculates the current home energy efficiency.
+     * The efficiency is calculated using the relation between
+     * the current solar production and the total energy consumption.
+     * @return The calculated efficiency percentage.
+     */
+    private double calculateEnergyEfficiency() {
+        
+        // Avoid division by zero.
+        if (smartMeterData.getCurrentSolarProduction() <= 0) {
+            return 0;
+        }
 
-    // ======== Server Streaming method implementation ===========
+        // Calculate the efficiency percentage - Mock values.
+        double production = smartMeterData.getCurrentSolarProduction();
+        int battery = smartMeterData.getBatteryLevel();
+
+        if (production >= 5 && battery >= 80) {
+            return 95;
+        }
+
+        if (production >= 3 && battery >= 50) {
+            return 80;
+        }
+
+        if (production >= 2) {
+            return 65;
+        }
+
+        return 40;
+    }
+
+    /**
+     * Generates an energy recommendation based on
+     * the current production and battery level.
+     * @return A recommendation message.
+     */
+    private String generateRecommendation() {
+
+        // High production and low battery.
+        if (smartMeterData.getCurrentSolarProduction() >= 5 && smartMeterData.getBatteryLevel() < 40) {
+            
+            return "Charge the battery using available solar energy.";
+        }
+
+        // Low production and high consumption.
+        if (smartMeterData.getCurrentSolarProduction() < 3 && smartMeterData.getTotalConsumption() > 1000) {
+
+            return "Reduce unnecessary energy consumption.";
+        }
+
+        // Battery almost full.
+        if (smartMeterData.getBatteryLevel() > 90) {
+
+            return "Battery is almost full. Consider using stored energy.";
+        }
+
+        // Default recommendation.
+        return "Energy usage is operating efficiently.";
+    }
+    
+    
+    // ======== SERVER STREAMING METHOD IMPLEMENTATION ===========
+    
     // One request is received, and multiple ReportEntry messages are streamed back to the client, generating the energy report.
     @Override
     public void generateEnergyReport(GenerateEnergyReportRequest request, StreamObserver<ReportEntry> responseObserver) {
@@ -132,7 +200,7 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
         return ReportEntry.newBuilder().setSection(section).setValue(value).setDescription(description).build();
     }
 
-    // ======== Client Streaming method implementation ========
+    // ======== CLIENT STREAMING METHOD IMPLEMENTATION ========
     @Override
     public StreamObserver<ConsumptionReading> uploadConsumptionReadings(StreamObserver<ConsumptionSummary> responseObserver) {
         
@@ -179,12 +247,6 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
                 } else {
                     averageConsumption = (double) totalConsumption / readings.size();
                 }
-                
-            // Updates the Smart Meter internal state.
-            smartMeterData.setTotalConsumption(totalConsumption);
-            smartMeterData.setAverageConsumption(averageConsumption);
-            smartMeterData.setHighestConsumer(highestConsumer);
-            smartMeterData.setHighestConsumption(highestConsumption);
 
             // building the consumption summary to send back to the client
             ConsumptionSummary summary = ConsumptionSummary.newBuilder().setHighestConsumer(highestConsumer)
