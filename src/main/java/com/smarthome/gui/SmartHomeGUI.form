@@ -372,31 +372,246 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace pref="153" max="32767" attributes="0"/>
-                      <Component id="smartMeterLabel" min="-2" pref="251" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="317" max="-2" attributes="0"/>
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" pref="55" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="deviceNameLbl" min="-2" max="-2" attributes="0"/>
+                                  <Component id="deviceNameTxt" min="-2" pref="173" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Group type="102" attributes="0">
+                                              <EmptySpace min="-2" pref="168" max="-2" attributes="0"/>
+                                              <Component id="readingsSummaryLbl" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <EmptySpace min="-2" pref="9" max="-2" attributes="0"/>
+                                              <Component id="deviceNameLbl1" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                      </Group>
+                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                                      <Component id="consumptionTxt" min="-2" pref="94" max="-2" attributes="0"/>
+                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                      <Component id="addReadingBtn" min="-2" pref="116" max="-2" attributes="0"/>
+                                      <EmptySpace max="32767" attributes="0"/>
+                                      <Component id="sendReadingBtn" min="-2" pref="152" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="jScrollPane4" min="-2" pref="250" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="82" max="-2" attributes="0"/>
+                              <Component id="jScrollPane5" max="32767" attributes="0"/>
+                          </Group>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="addedReadingsLbl" min="-2" max="-2" attributes="0"/>
+                                  <Component id="smartMeterLabel1" min="-2" pref="527" max="-2" attributes="0"/>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="uploadReadingsLbl" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="btnEnergyReport" min="-2" pref="211" max="-2" attributes="0"/>
+                                          <Component id="txtHouseId" alignment="0" min="-2" pref="106" max="-2" attributes="0"/>
+                                          <Component id="houseIdlbl1" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace min="-2" pref="95" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="energyReportLbl" min="-2" max="-2" attributes="0"/>
+                                          <Component id="jScrollPane3" min="-2" pref="314" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                              </Group>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace min="-2" pref="46" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="smartMeterLabel" pref="90" max="32767" attributes="0"/>
-                      <EmptySpace min="0" pref="387" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="smartMeterLabel1" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="energyReportLbl" min="-2" max="-2" attributes="0"/>
+                          <Component id="houseIdlbl1" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="txtHouseId" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
+                              <Component id="btnEnergyReport" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="jScrollPane3" min="-2" pref="139" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="25" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="1" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="uploadReadingsLbl" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="deviceNameLbl" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="deviceNameLbl1" alignment="1" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <Group type="103" groupAlignment="3" attributes="0">
+                                          <Component id="consumptionTxt" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="deviceNameTxt" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="sendReadingBtn" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="addReadingBtn" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="addedReadingsLbl" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Component id="readingsSummaryLbl" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jScrollPane4" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <Component id="jScrollPane5" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace pref="30" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
           </Layout>
           <SubComponents>
-            <Component class="java.awt.Label" name="smartMeterLabel">
+            <Component class="java.awt.Label" name="smartMeterLabel1">
               <Properties>
-                <Property name="alignment" type="int" value="1"/>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Dubai" size="18" style="0"/>
+                  <Font name="Dubai" size="16" style="1"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Smart Meter Service"/>
               </Properties>
+              <AccessibilityProperties>
+                <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="Smart Meter Service"/>
+              </AccessibilityProperties>
+            </Component>
+            <Component class="java.awt.Label" name="uploadReadingsLbl">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Upload Consumption Readings:"/>
+              </Properties>
+            </Component>
+            <Component class="java.awt.TextField" name="txtHouseId">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="House-001"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="btnEnergyReport">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Generate Energy Report"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnEnergyReportActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="java.awt.Label" name="energyReportLbl">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Energy Report Result:"/>
+              </Properties>
+            </Component>
+            <Container class="javax.swing.JScrollPane" name="jScrollPane3">
+              <AuxValues>
+                <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+              </AuxValues>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTextArea" name="energyReportTxt">
+                  <Properties>
+                    <Property name="columns" type="int" value="20"/>
+                    <Property name="rows" type="int" value="5"/>
+                    <Property name="text" type="java.lang.String" value="Energy report results will be shown here..."/>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="java.awt.Label" name="houseIdlbl1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="House ID:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="deviceNameLbl">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Device name:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="consumptionTxt">
+            </Component>
+            <Component class="javax.swing.JLabel" name="deviceNameLbl1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Consumption (Wh):"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="deviceNameTxt">
+            </Component>
+            <Component class="javax.swing.JButton" name="sendReadingBtn">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Send Readings"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="sendReadingBtnActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="java.awt.Label" name="addedReadingsLbl">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Added Readings:"/>
+              </Properties>
+            </Component>
+            <Container class="javax.swing.JScrollPane" name="jScrollPane4">
+              <AuxValues>
+                <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+              </AuxValues>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTextArea" name="addedReadingTxt">
+                  <Properties>
+                    <Property name="columns" type="int" value="20"/>
+                    <Property name="rows" type="int" value="5"/>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="java.awt.Label" name="readingsSummaryLbl">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Summary:"/>
+              </Properties>
+            </Component>
+            <Container class="javax.swing.JScrollPane" name="jScrollPane5">
+              <AuxValues>
+                <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+              </AuxValues>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTextArea" name="readingResultTxt">
+                  <Properties>
+                    <Property name="columns" type="int" value="20"/>
+                    <Property name="rows" type="int" value="5"/>
+                    <Property name="text" type="java.lang.String" value="Consumption reading results will be shown here..."/>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="javax.swing.JButton" name="addReadingBtn">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Add Reading"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addReadingBtnActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

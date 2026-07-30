@@ -22,32 +22,14 @@ public class SmartMeterData {
     // Stores the unique identifier of the monitored house.
     private String houseId;
 
-    // ============= Solar Information (Future Integration)=============
-
-    /*
-     * ----------------------------------------------------------------------
-     * FUTURE INTEGRATION PHASE
-     *
-     * These fields will be updated after the Smart Meter starts
-     * communicating with the Solar Service through gRPC.
-     * ----------------------------------------------------------------------
-     */
+    // ============= Solar Information =============
 
     // Stores the current solar energy production.
     private double currentSolarProduction;
     // Stores the production measurement unit (e.g. kWh).
     private String productionUnit;
 
-    // ============= Battery Information (Future Integration)=============
-
-    /*
-     * ----------------------------------------------------------------------
-     * FUTURE INTEGRATION PHASE
-     *
-     * These fields will be updated after the Smart Meter starts
-     * communicating with the Battery Storage Service.
-     * ----------------------------------------------------------------------
-     */
+    // ============= Battery Information =============
 
     // Stores the current battery level.
     private int batteryLevel;

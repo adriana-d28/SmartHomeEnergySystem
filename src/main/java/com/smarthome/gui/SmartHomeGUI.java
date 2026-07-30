@@ -10,6 +10,13 @@ import com.smarthome.battery.BatteryStatusInfo;
 import com.smarthome.integrationclient.BatteryGrpcClient;
 import com.smarthome.battery.BatteryMode;
 import com.smarthome.battery.BatteryMonitoringResponse;
+import com.smarthome.integrationclient.SmartMeterGrpcClient;
+
+import com.smarthome.smartmeter.ReportEntry;
+import com.smarthome.smartmeter.ConsumptionReading;
+import com.smarthome.smartmeter.ConsumptionSummary;
+
+import java.util.Iterator;
 
 import io.grpc.stub.StreamObserver;
 import javax.swing.JOptionPane;
@@ -27,6 +34,8 @@ public class SmartHomeGUI extends javax.swing.JFrame {
     private final SolarGrpcClient solarClient;
     // Internal client responsible for communicating with the Battery Storage Service.
     private final BatteryGrpcClient batteryClient;
+    // Internal client responsible for communicating with Smart Meter Service.
+    private SmartMeterGrpcClient smartMeterClient;
     
     /**
      * Creates new form MainGUI
@@ -37,6 +46,8 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         solarClient = new SolarGrpcClient();
         // Initializes the Battery client.
         batteryClient = new BatteryGrpcClient();
+        // Initializes the Smart Meter client.
+        smartMeterClient = new SmartMeterGrpcClient();
         // Set main window location to centralize it
         setLocationRelativeTo(null);
     }
@@ -75,7 +86,26 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         txtBatteryResults = new javax.swing.JTextArea();
         smartMeterTab = new javax.swing.JPanel();
-        smartMeterLabel = new java.awt.Label();
+        smartMeterLabel1 = new java.awt.Label();
+        uploadReadingsLbl = new java.awt.Label();
+        txtHouseId = new java.awt.TextField();
+        btnEnergyReport = new javax.swing.JButton();
+        energyReportLbl = new java.awt.Label();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        energyReportTxt = new javax.swing.JTextArea();
+        houseIdlbl1 = new java.awt.Label();
+        deviceNameLbl = new javax.swing.JLabel();
+        consumptionTxt = new javax.swing.JTextField();
+        deviceNameLbl1 = new javax.swing.JLabel();
+        deviceNameTxt = new javax.swing.JTextField();
+        sendReadingBtn = new javax.swing.JButton();
+        addedReadingsLbl = new java.awt.Label();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        addedReadingTxt = new javax.swing.JTextArea();
+        readingsSummaryLbl = new java.awt.Label();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        readingResultTxt = new javax.swing.JTextArea();
+        addReadingBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Smart Home Energy Management System");
@@ -247,25 +277,139 @@ public class SmartHomeGUI extends javax.swing.JFrame {
 
         tabbedPane.addTab("Battery Storage", batteryPanelTab);
 
-        smartMeterLabel.setAlignment(java.awt.Label.CENTER);
-        smartMeterLabel.setFont(new java.awt.Font("Dubai", 0, 18)); // NOI18N
-        smartMeterLabel.setText("Smart Meter Service");
+        smartMeterLabel1.setFont(new java.awt.Font("Dubai", 1, 16)); // NOI18N
+        smartMeterLabel1.setText("Smart Meter Service");
+
+        uploadReadingsLbl.setText("Upload Consumption Readings:");
+
+        txtHouseId.setText("House-001");
+
+        btnEnergyReport.setText("Generate Energy Report");
+        btnEnergyReport.addActionListener(this::btnEnergyReportActionPerformed);
+
+        energyReportLbl.setText("Energy Report Result:");
+
+        energyReportTxt.setColumns(20);
+        energyReportTxt.setRows(5);
+        energyReportTxt.setText("Energy report results will be shown here...");
+        jScrollPane3.setViewportView(energyReportTxt);
+
+        houseIdlbl1.setText("House ID:");
+
+        deviceNameLbl.setText("Device name:");
+
+        deviceNameLbl1.setText("Consumption (Wh):");
+
+        sendReadingBtn.setText("Send Readings");
+        sendReadingBtn.addActionListener(this::sendReadingBtnActionPerformed);
+
+        addedReadingsLbl.setText("Added Readings:");
+
+        addedReadingTxt.setColumns(20);
+        addedReadingTxt.setRows(5);
+        jScrollPane4.setViewportView(addedReadingTxt);
+
+        readingsSummaryLbl.setText("Summary:");
+
+        readingResultTxt.setColumns(20);
+        readingResultTxt.setRows(5);
+        readingResultTxt.setText("Consumption reading results will be shown here...");
+        jScrollPane5.setViewportView(readingResultTxt);
+
+        addReadingBtn.setText("Add Reading");
+        addReadingBtn.addActionListener(this::addReadingBtnActionPerformed);
 
         javax.swing.GroupLayout smartMeterTabLayout = new javax.swing.GroupLayout(smartMeterTab);
         smartMeterTab.setLayout(smartMeterTabLayout);
         smartMeterTabLayout.setHorizontalGroup(
             smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, smartMeterTabLayout.createSequentialGroup()
-                .addContainerGap(153, Short.MAX_VALUE)
-                .addComponent(smartMeterLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(317, 317, 317))
+            .addGroup(smartMeterTabLayout.createSequentialGroup()
+                .addGap(55, 55, 55)
+                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(deviceNameLbl)
+                            .addComponent(deviceNameTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(smartMeterTabLayout.createSequentialGroup()
+                                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                                        .addGap(168, 168, 168)
+                                        .addComponent(readingsSummaryLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                                        .addGap(9, 9, 9)
+                                        .addComponent(deviceNameLbl1)))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(smartMeterTabLayout.createSequentialGroup()
+                                .addGap(12, 12, 12)
+                                .addComponent(consumptionTxt, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(addReadingBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(sendReadingBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(82, 82, 82)
+                        .addComponent(jScrollPane5))
+                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(addedReadingsLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(smartMeterLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 527, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(smartMeterTabLayout.createSequentialGroup()
+                                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(uploadReadingsLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(btnEnergyReport, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(txtHouseId, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(houseIdlbl1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(95, 95, 95)
+                                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(energyReportLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addGap(46, 46, 46))
         );
         smartMeterTabLayout.setVerticalGroup(
             smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(smartMeterTabLayout.createSequentialGroup()
-                .addComponent(smartMeterLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
-                .addGap(0, 387, Short.MAX_VALUE))
+                .addContainerGap()
+                .addComponent(smartMeterLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(energyReportLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(houseIdlbl1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                        .addComponent(txtHouseId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(29, 29, 29)
+                        .addComponent(btnEnergyReport))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(25, 25, 25)
+                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(smartMeterTabLayout.createSequentialGroup()
+                        .addComponent(uploadReadingsLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(deviceNameLbl)
+                            .addComponent(deviceNameLbl1))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(smartMeterTabLayout.createSequentialGroup()
+                                .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(consumptionTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(deviceNameTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(sendReadingBtn)
+                                    .addComponent(addReadingBtn))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(addedReadingsLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(readingsSummaryLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(30, Short.MAX_VALUE))
         );
+
+        smartMeterLabel1.getAccessibleContext().setAccessibleName("Smart Meter Service");
 
         tabbedPane.addTab("Smart Meter", smartMeterTab);
 
@@ -582,6 +726,155 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         batteryClient.changeBatteryMode(BatteryMode.PERFORMANCE);
     }//GEN-LAST:event_rbPerformanceModeActionPerformed
 
+    private void btnEnergyReportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnergyReportActionPerformed
+        // Get the House ID entered by the user.
+        String houseId = txtHouseId.getText().trim();
+
+        // Validate the House ID.
+        if (houseId.isEmpty()) {
+
+            JOptionPane.showMessageDialog(this, "Please enter a House ID.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+
+            return;
+        }
+
+        // Clear previous report results.
+        energyReportTxt.setText("");
+
+        // Request the energy report.
+        smartMeterClient.generateEnergyReport(houseId, new StreamObserver<ReportEntry>() {
+
+            @Override
+            public void onNext(ReportEntry entry) {
+                SwingUtilities.invokeLater(() -> {
+                    energyReportTxt.append(entry.getSection() + "\n" + entry.getValue() + "\n" + entry.getDescription() + "\n\n");
+                });
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null, "Error while receiving the energy report.",  "gRPC Error", JOptionPane.ERROR_MESSAGE);
+                });
+            }
+
+            @Override
+            public void onCompleted() {
+
+                System.out.println("Energy report completed.");
+
+            }
+        });
+    }//GEN-LAST:event_btnEnergyReportActionPerformed
+
+    private void sendReadingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendReadingBtnActionPerformed
+        // Check if there are readings to send.
+        if (addedReadingTxt.getText().trim().isEmpty()) {
+
+            JOptionPane.showMessageDialog(this, "Please add at least one reading before sending.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+
+            return;
+        }
+
+        // Clear the previous summary.
+        readingResultTxt.setText("");
+        // Create the response observer.
+        StreamObserver<ConsumptionSummary> responseObserver = new StreamObserver<ConsumptionSummary>() {
+
+            @Override
+            public void onNext(ConsumptionSummary summary) {
+
+                SwingUtilities.invokeLater(() -> {
+
+                    readingResultTxt.append("Highest Consumer: " + summary.getHighestConsumer() + "\n");
+                    readingResultTxt.append("Highest Consumption: " + summary.getHighestConsumption() + " Wh\n");
+                    readingResultTxt.append("Total Consumption: " + summary.getTotalConsumption() + " Wh\n");
+                    readingResultTxt.append("Average Consumption: " + String.format("%.2f", summary.getAverageConsumption()) + " Wh\n");
+
+                });
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+                SwingUtilities.invokeLater(() -> {
+
+                    JOptionPane.showMessageDialog(null, "Error while sending the consumption readings.", "gRPC Error", JOptionPane.ERROR_MESSAGE);
+
+                });
+            }
+
+            @Override
+            public void onCompleted() {
+
+                System.out.println("Consumption readings successfully processed.");
+
+            }
+        };
+
+        // Start the Client Streaming RPC.
+        StreamObserver<ConsumptionReading> requestObserver = smartMeterClient.uploadConsumptionReadings(responseObserver);
+
+        // Split all stored readings.
+        String[] readings = addedReadingTxt.getText().split("\n");
+
+        // Send each reading to the server.
+        for (String reading : readings) {
+
+            if (reading.trim().isEmpty()) {
+                continue;
+            }
+
+            String[] parts = reading.split(" - ");
+            ConsumptionReading request = ConsumptionReading.newBuilder().setDevice(parts[0]).setConsumption(Integer.parseInt(parts[1].replace(" Wh", ""))).build();
+            requestObserver.onNext(request);
+
+        }
+
+        // Notify the server that all readings have been sent.
+        requestObserver.onCompleted();
+        // Clear the readings list.
+        addedReadingTxt.setText("");
+        // Clear the input fields.
+        deviceNameTxt.setText("");
+        consumptionTxt.setText("");
+    }//GEN-LAST:event_sendReadingBtnActionPerformed
+
+    private void addReadingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addReadingBtnActionPerformed
+        // Get the values entered by the user.
+        String device = deviceNameTxt.getText().trim();
+        String consumptionText = consumptionTxt.getText().trim();
+
+        // Validate the input fields.
+        if (device.isEmpty() || consumptionText.isEmpty()) {
+
+            JOptionPane.showMessageDialog(this, "Please enter the device name and the consumption value.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+
+            return;
+        }
+        int consumption;
+
+        try {
+
+            // Convert the consumption value to an integer.
+            consumption = Integer.parseInt(consumptionText);
+
+        } catch (NumberFormatException e) {
+
+            JOptionPane.showMessageDialog(this, "Consumption must be a numeric value.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+
+            return;
+        }
+        // Add the reading to the list.
+        addedReadingTxt.append(device + " - " + consumption + " Wh\n");
+        // Clear the input fields.
+        deviceNameTxt.setText("");
+        consumptionTxt.setText("");
+        // Return the cursor to the Device Name field.
+        deviceNameTxt.requestFocus();
+    }//GEN-LAST:event_addReadingBtnActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -608,23 +901,40 @@ public class SmartHomeGUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addReadingBtn;
+    private javax.swing.JTextArea addedReadingTxt;
+    private java.awt.Label addedReadingsLbl;
     private javax.swing.JLabel batteryIdLabel;
     private javax.swing.JLabel batteryModelbl;
     private javax.swing.JPanel batteryPanelTab;
     private javax.swing.JLabel batteryResultLabel;
     private java.awt.Label batteryStorageLabel;
+    private javax.swing.JButton btnEnergyReport;
     private javax.swing.JButton btnGetBatteryStatus;
     private javax.swing.JButton btnGetProduction;
     private javax.swing.JToggleButton btnMonitorProduction;
     private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JTextField consumptionTxt;
+    private javax.swing.JLabel deviceNameLbl;
+    private javax.swing.JLabel deviceNameLbl1;
+    private javax.swing.JTextField deviceNameTxt;
+    private java.awt.Label energyReportLbl;
+    private javax.swing.JTextArea energyReportTxt;
+    private java.awt.Label houseIdlbl1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private java.awt.Label panelIdLabel;
     private javax.swing.JLabel productionResultLabel;
     private javax.swing.JRadioButton rbEcoMode;
     private javax.swing.JRadioButton rbNormalMode;
     private javax.swing.JRadioButton rbPerformanceMode;
-    private java.awt.Label smartMeterLabel;
+    private javax.swing.JTextArea readingResultTxt;
+    private java.awt.Label readingsSummaryLbl;
+    private javax.swing.JButton sendReadingBtn;
+    private java.awt.Label smartMeterLabel1;
     private javax.swing.JPanel smartMeterTab;
     private java.awt.Label solarPanelLabel;
     private javax.swing.JPanel solarPanelTab;
@@ -632,7 +942,9 @@ public class SmartHomeGUI extends javax.swing.JFrame {
     private javax.swing.JToggleButton tglMonitorBattery;
     private javax.swing.JTextField txtBatteryId;
     private javax.swing.JTextArea txtBatteryResults;
+    private java.awt.TextField txtHouseId;
     private java.awt.TextField txtSolarPanelId;
     private javax.swing.JTextArea txtSolarResults;
+    private java.awt.Label uploadReadingsLbl;
     // End of variables declaration//GEN-END:variables
 }

@@ -169,21 +169,45 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
                 smartMeterData.getCurrentSolarProduction() + " " + smartMeterData.getProductionUnit(),
                 "Current energy produced by the solar panels."
         ));
+        
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         // Sends the battery level.
         responseObserver.onNext(createReportEntry("Battery Level", smartMeterData.getBatteryLevel() + "%",
                 "Current battery charge level."
         ));
+        
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         // Sends the highest consuming appliance.
         responseObserver.onNext(createReportEntry("Highest Consumer", smartMeterData.getHighestConsumer(),
                 "Appliance with the highest energy consumption."
         ));
+        
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         // Sends the calculated energy efficiency.
         responseObserver.onNext(createReportEntry("Energy Efficiency", smartMeterData.getEnergyEfficiency() + "%",
                 "Overall home energy efficiency."
         ));
+        
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         // Sends the Smart Meter recommendation.
         responseObserver.onNext(createReportEntry("Recommendation", smartMeterData.getRecommendation(),
