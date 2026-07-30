@@ -6,7 +6,11 @@ package com.smarthome.gui;
 
 import com.smarthome.integrationclient.SolarGrpcClient;
 import com.smarthome.solar.ProductionInfo;
-import com.smarthome.solar.ProductionInfo;
+import com.smarthome.battery.BatteryStatusInfo;
+import com.smarthome.integrationclient.BatteryGrpcClient;
+import com.smarthome.battery.BatteryMode;
+import com.smarthome.battery.BatteryMonitoringResponse;
+
 import io.grpc.stub.StreamObserver;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -21,6 +25,8 @@ public class SmartHomeGUI extends javax.swing.JFrame {
 
     // Internal client responsible for communicating with the Solar Panel Service.
     private final SolarGrpcClient solarClient;
+    // Internal client responsible for communicating with the Battery Storage Service.
+    private final BatteryGrpcClient batteryClient;
     
     /**
      * Creates new form MainGUI
@@ -29,6 +35,8 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         initComponents();
         // Initializes the client
         solarClient = new SolarGrpcClient();
+        // Initializes the Battery client.
+        batteryClient = new BatteryGrpcClient();
         // Set main window location to centralize it
         setLocationRelativeTo(null);
     }
@@ -42,6 +50,7 @@ public class SmartHomeGUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
         tabbedPane = new javax.swing.JTabbedPane();
         solarPanelTab = new javax.swing.JPanel();
         solarPanelLabel = new java.awt.Label();
@@ -54,6 +63,17 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         txtSolarResults = new javax.swing.JTextArea();
         batteryPanelTab = new javax.swing.JPanel();
         batteryStorageLabel = new java.awt.Label();
+        batteryIdLabel = new javax.swing.JLabel();
+        txtBatteryId = new javax.swing.JTextField();
+        btnGetBatteryStatus = new javax.swing.JButton();
+        tglMonitorBattery = new javax.swing.JToggleButton();
+        batteryModelbl = new javax.swing.JLabel();
+        rbNormalMode = new javax.swing.JRadioButton();
+        rbEcoMode = new javax.swing.JRadioButton();
+        rbPerformanceMode = new javax.swing.JRadioButton();
+        batteryResultLabel = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        txtBatteryResults = new javax.swing.JTextArea();
         smartMeterTab = new javax.swing.JPanel();
         smartMeterLabel = new java.awt.Label();
 
@@ -61,6 +81,8 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         setTitle("Smart Home Energy Management System");
         setMaximumSize(null);
         setPreferredSize(new java.awt.Dimension(750, 550));
+
+        tabbedPane.setForeground(new java.awt.Color(0, 0, 0));
 
         solarPanelLabel.setFont(new java.awt.Font("Dubai", 1, 16)); // NOI18N
         solarPanelLabel.setText("Solar Panel Service");
@@ -90,7 +112,6 @@ public class SmartHomeGUI extends javax.swing.JFrame {
             .addGroup(solarPanelTabLayout.createSequentialGroup()
                 .addGap(62, 62, 62)
                 .addGroup(solarPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(solarPanelLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(solarPanelTabLayout.createSequentialGroup()
                         .addGroup(solarPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 604, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -102,7 +123,8 @@ public class SmartHomeGUI extends javax.swing.JFrame {
                         .addContainerGap(55, Short.MAX_VALUE))
                     .addGroup(solarPanelTabLayout.createSequentialGroup()
                         .addComponent(txtSolarPanelId, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(solarPanelLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         solarPanelTabLayout.setVerticalGroup(
             solarPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -124,30 +146,103 @@ public class SmartHomeGUI extends javax.swing.JFrame {
                 .addContainerGap(20, Short.MAX_VALUE))
         );
 
-        solarPanelLabel.getAccessibleContext().setAccessibleName("Solar Panel Service");
         solarPanelLabel.getAccessibleContext().setAccessibleDescription("");
 
         tabbedPane.addTab("Solar Panel", solarPanelTab);
 
-        batteryStorageLabel.setAlignment(java.awt.Label.CENTER);
-        batteryStorageLabel.setFont(new java.awt.Font("Dubai", 0, 18)); // NOI18N
+        batteryStorageLabel.setFont(new java.awt.Font("Dubai", 1, 16)); // NOI18N
         batteryStorageLabel.setText("Battery Storage Service");
+
+        batteryIdLabel.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        batteryIdLabel.setForeground(new java.awt.Color(0, 0, 0));
+        batteryIdLabel.setText("Battery ID:");
+
+        txtBatteryId.setBackground(new java.awt.Color(255, 255, 255));
+        txtBatteryId.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        txtBatteryId.setForeground(new java.awt.Color(0, 0, 0));
+        txtBatteryId.setText("BAT-001");
+
+        btnGetBatteryStatus.setText("Get Battery Status");
+        btnGetBatteryStatus.addActionListener(this::btnGetBatteryStatusActionPerformed);
+
+        tglMonitorBattery.setText("Start Monitoring Battery");
+        tglMonitorBattery.addActionListener(this::tglMonitorBatteryActionPerformed);
+
+        batteryModelbl.setText("Change Battery Mode");
+
+        buttonGroup1.add(rbNormalMode);
+        rbNormalMode.setSelected(true);
+        rbNormalMode.setText("Normal");
+        rbNormalMode.setEnabled(false);
+        rbNormalMode.addActionListener(this::rbNormalModeActionPerformed);
+
+        buttonGroup1.add(rbEcoMode);
+        rbEcoMode.setText("Eco");
+        rbEcoMode.setEnabled(false);
+        rbEcoMode.addActionListener(this::rbEcoModeActionPerformed);
+
+        buttonGroup1.add(rbPerformanceMode);
+        rbPerformanceMode.setText("Performance");
+        rbPerformanceMode.setEnabled(false);
+        rbPerformanceMode.addActionListener(this::rbPerformanceModeActionPerformed);
+
+        batteryResultLabel.setFont(new java.awt.Font("Segoe UI Semibold", 0, 12)); // NOI18N
+        batteryResultLabel.setText("Results");
+
+        txtBatteryResults.setColumns(20);
+        txtBatteryResults.setRows(5);
+        txtBatteryResults.setText("Battery Storage results will be shown here...");
+        jScrollPane2.setViewportView(txtBatteryResults);
 
         javax.swing.GroupLayout batteryPanelTabLayout = new javax.swing.GroupLayout(batteryPanelTab);
         batteryPanelTab.setLayout(batteryPanelTabLayout);
         batteryPanelTabLayout.setHorizontalGroup(
             batteryPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, batteryPanelTabLayout.createSequentialGroup()
-                .addContainerGap(153, Short.MAX_VALUE)
-                .addComponent(batteryStorageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(373, 373, 373))
+                .addContainerGap(62, Short.MAX_VALUE)
+                .addGroup(batteryPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(batteryResultLabel)
+                    .addGroup(batteryPanelTabLayout.createSequentialGroup()
+                        .addComponent(rbNormalMode)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(rbEcoMode)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(rbPerformanceMode))
+                    .addComponent(batteryModelbl)
+                    .addComponent(batteryIdLabel)
+                    .addComponent(batteryStorageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 527, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(batteryPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(btnGetBatteryStatus, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(tglMonitorBattery, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 591, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtBatteryId, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(68, 68, 68))
         );
         batteryPanelTabLayout.setVerticalGroup(
             batteryPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(batteryPanelTabLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(batteryStorageLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(431, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(batteryIdLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtBatteryId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(btnGetBatteryStatus)
+                .addGap(18, 18, 18)
+                .addComponent(tglMonitorBattery)
+                .addGap(18, 18, 18)
+                .addComponent(batteryModelbl)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(batteryPanelTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(rbNormalMode)
+                    .addComponent(rbEcoMode)
+                    .addComponent(rbPerformanceMode))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(batteryResultLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         tabbedPane.addTab("Battery Storage", batteryPanelTab);
@@ -308,6 +403,185 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnMonitorProductionActionPerformed
 
+    private void btnGetBatteryStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGetBatteryStatusActionPerformed
+        
+        // Retrieve the Battery ID entered by the user.
+        String batteryId = txtBatteryId.getText().trim();
+
+        // Check whether the Battery ID field is empty.
+        if (batteryId.isBlank()) {
+
+            // Display an error message requesting a valid Battery ID.
+            JOptionPane.showMessageDialog(this, "Please enter a Battery ID.", "Missing Battery ID", JOptionPane.WARNING_MESSAGE);
+
+            // Stop the execution of the method.
+            return;
+        }
+
+        // Display a temporary message while waiting for the server response.
+        txtBatteryResults.setText("Loading battery status...");
+
+        try {
+
+            // Invoke the Unary RPC through the internal Battery gRPC client.
+            BatteryStatusInfo batteryInfo = batteryClient.getBatteryStatus(batteryId);
+
+            // Format the response in a user-friendly way.
+            String result =
+                    "Battery Status Information\n"
+                    + "----------------------------------------\n"
+                    + "Battery ID: " + batteryInfo.getBatteryId() + "\n\n"
+                    + "Battery Level: " + batteryInfo.getBatteryLevel() + "%\n"
+                    + "Charging Status: " + batteryInfo.getChargingStatus() + "\n"
+                    + "Current Mode: " + batteryInfo.getCurrentMode() + "\n";
+
+            // Display the formatted result.
+            txtBatteryResults.setText(result);
+
+        } catch (Exception e) {
+
+            // Display the error message if the RPC invocation fails.
+            txtBatteryResults.setText("Unable to retrieve the battery status.\n\n" + e.getMessage());
+        }
+    }//GEN-LAST:event_btnGetBatteryStatusActionPerformed
+
+    private void tglMonitorBatteryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tglMonitorBatteryActionPerformed
+        // Retrieve the Battery ID entered by the user.
+        String batteryId = txtBatteryId.getText().trim();
+
+        // Check whether the Battery ID field is empty.
+        if (batteryId.isBlank()) {
+
+            // Display a warning message.
+            JOptionPane.showMessageDialog(this, "Please enter a Battery ID.", "Missing Battery ID", JOptionPane.WARNING_MESSAGE);
+
+            // Restore the ToggleButton state.
+            tglMonitorBattery.setSelected(false);
+
+            return;
+        }
+
+        // Check whether the monitoring should start or stop.
+        if (tglMonitorBattery.isSelected()) {
+
+            // Update the ToggleButton text.
+            tglMonitorBattery.setText("Stop Monitoring");
+
+            // Clear previous results.
+            txtBatteryResults.setText("");
+
+            // Display a status message.
+            txtBatteryResults.append("Monitoring started...\n\n");
+
+            // Enable the battery mode controls.
+            rbNormalMode.setEnabled(true);
+            rbEcoMode.setEnabled(true);
+            rbPerformanceMode.setEnabled(true);
+
+            // Select the default battery mode.
+            rbNormalMode.setSelected(true);
+
+            // Start the Bidirectional Streaming RPC.
+            batteryClient.monitorBatteryStatus(batteryId, new StreamObserver<BatteryMonitoringResponse>() {
+
+                @Override
+                public void onNext(BatteryMonitoringResponse response) {
+
+                    // Update the GUI on the Swing Event Dispatch Thread.
+                    SwingUtilities.invokeLater(() -> {
+                        BatteryStatusInfo batteryInfo = response.getBatteryInfo();
+
+                        txtBatteryResults.append(
+                                "Battery ID: " + batteryInfo.getBatteryId() + "\n"
+                                + "Battery Level: " + batteryInfo.getBatteryLevel() + "%\n"
+                                + "Charging Status: " + batteryInfo.getChargingStatus() + "\n"
+                                + "Current Mode: " + batteryInfo.getCurrentMode() + "\n"
+                                + "Estimated Time Remaining: "
+                                + response.getEstimatedTimeRemaining() + "\n"
+                                + "Message: " + response.getMessage() + "\n\n");
+                    });
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+
+                    // Update the GUI on the Swing Event Dispatch Thread.
+                    SwingUtilities.invokeLater(() -> {
+                        txtBatteryResults.append("Monitoring stopped.\n" + throwable.getMessage() + "\n");
+
+                        // Restore the ToggleButton.
+                        tglMonitorBattery.setSelected(false);
+                        tglMonitorBattery.setText("Start Monitoring Battery");
+
+                        // Disable the battery mode controls.
+                        rbNormalMode.setEnabled(false);
+                        rbEcoMode.setEnabled(false);
+                        rbPerformanceMode.setEnabled(false);
+                    });
+                }
+
+                @Override
+                public void onCompleted() {
+
+                    // Update the GUI on the Swing Event Dispatch Thread.
+                    SwingUtilities.invokeLater(() -> {
+                        txtBatteryResults.append("Monitoring completed.\n");
+
+                        // Restore the ToggleButton.
+                        tglMonitorBattery.setSelected(false);
+                        tglMonitorBattery.setText("Start Monitoring Battery");
+
+                        // Disable the battery mode controls.
+                        rbNormalMode.setEnabled(false);
+                        rbEcoMode.setEnabled(false);
+                        rbPerformanceMode.setEnabled(false);
+                    });
+                }
+            });
+
+        } else {
+
+            // Stop the monitoring stream.
+            batteryClient.stopMonitoring();
+            // Inform the user.
+            txtBatteryResults.append("\nMonitoring cancelled by the user.\n");
+            // Restore the ToggleButton text.
+            tglMonitorBattery.setText("Start Monitoring Battery");
+            
+            // Disable the battery mode controls.
+            rbNormalMode.setEnabled(false);
+            rbEcoMode.setEnabled(false);
+            rbPerformanceMode.setEnabled(false);
+        }
+    }//GEN-LAST:event_tglMonitorBatteryActionPerformed
+
+    private void rbNormalModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbNormalModeActionPerformed
+        // Ignore the event if the RadioButton is disabled.
+        if (!rbNormalMode.isEnabled()) {
+            return;
+        }
+        // Send the NORMAL mode command to the Battery Service.
+        batteryClient.changeBatteryMode(BatteryMode.NORMAL);
+    }//GEN-LAST:event_rbNormalModeActionPerformed
+
+    private void rbEcoModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbEcoModeActionPerformed
+        // Ignore the event if the RadioButton is disabled.
+        if (!rbEcoMode.isEnabled()) {
+            return;
+        }
+        // Send the ECO mode command to the Battery Service.
+        batteryClient.changeBatteryMode(BatteryMode.ECO);
+    }//GEN-LAST:event_rbEcoModeActionPerformed
+
+    private void rbPerformanceModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbPerformanceModeActionPerformed
+        // Ignore the event if the RadioButton is disabled.
+        if (!rbPerformanceMode.isEnabled()) {
+            return;
+        }
+        // Send the PERFORMANCE mode command to the Battery Service.
+        batteryClient.changeBatteryMode(BatteryMode.PERFORMANCE);
+    }//GEN-LAST:event_rbPerformanceModeActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -334,18 +608,30 @@ public class SmartHomeGUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel batteryIdLabel;
+    private javax.swing.JLabel batteryModelbl;
     private javax.swing.JPanel batteryPanelTab;
+    private javax.swing.JLabel batteryResultLabel;
     private java.awt.Label batteryStorageLabel;
+    private javax.swing.JButton btnGetBatteryStatus;
     private javax.swing.JButton btnGetProduction;
     private javax.swing.JToggleButton btnMonitorProduction;
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private java.awt.Label panelIdLabel;
     private javax.swing.JLabel productionResultLabel;
+    private javax.swing.JRadioButton rbEcoMode;
+    private javax.swing.JRadioButton rbNormalMode;
+    private javax.swing.JRadioButton rbPerformanceMode;
     private java.awt.Label smartMeterLabel;
     private javax.swing.JPanel smartMeterTab;
     private java.awt.Label solarPanelLabel;
     private javax.swing.JPanel solarPanelTab;
     private javax.swing.JTabbedPane tabbedPane;
+    private javax.swing.JToggleButton tglMonitorBattery;
+    private javax.swing.JTextField txtBatteryId;
+    private javax.swing.JTextArea txtBatteryResults;
     private java.awt.TextField txtSolarPanelId;
     private javax.swing.JTextArea txtSolarResults;
     // End of variables declaration//GEN-END:variables
