@@ -65,19 +65,41 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
      */
     @Override
     public void getBatteryStatus(GetBatteryStatusRequest request, StreamObserver<BatteryStatusInfo> responseObserver) {
-        // test log - remove it
-        System.out.println("Battery Service received a request from another service.");
-        // Call the method to update the battery status according to the Solar Panel information
-        updateBatteryStatus();
-        // Create the response message using the Builder pattern: sets the data, the format and build.
-        BatteryStatusInfo response = BatteryStatusInfo.newBuilder().setBatteryId(batteryData.getBatteryId())
-                .setBatteryLevel(batteryData.getBatteryLevel()).setChargingStatus(batteryData.getChargingStatus())
-                .setCurrentMode(batteryData.getCurrentMode()).build();
+        // Remote error handling treatment - validate the Battery ID received from the client.
+        if (request.getBatteryId().isBlank()) {
+
+            // Return an INVALID_ARGUMENT gRPC error.
+            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT.withDescription("Battery ID cannot be empty.").asRuntimeException());
+
+            // Stop the method execution.
+            return;
+        }
         
-        // Send the response to the client - due to its unary nature, we only need one.
-        responseObserver.onNext(response);
-        // Finish and close connection
-        responseObserver.onCompleted();
+        try {
+            
+            // Call the method to update the battery status according to the Solar Panel information
+            updateBatteryStatus();
+            // Create the response message using the Builder pattern: sets the data, the format and build.
+            BatteryStatusInfo response = BatteryStatusInfo.newBuilder().setBatteryId(batteryData.getBatteryId())
+                    .setBatteryLevel(batteryData.getBatteryLevel()).setChargingStatus(batteryData.getChargingStatus())
+                    .setCurrentMode(batteryData.getCurrentMode()).build();
+
+            // Send the response to the client - due to its unary nature, we only need one.
+            responseObserver.onNext(response);
+            // Finish and close connection
+            responseObserver.onCompleted();
+             
+        } catch (Exception e) {
+            
+            // Forward existing gRPC errors without changing them.
+            if (e instanceof io.grpc.StatusRuntimeException) {
+                responseObserver.onError(e);
+                return;
+            }
+            
+            // Remote error handling - return an INTERNAL gRPC error.
+            responseObserver.onError(io.grpc.Status.INTERNAL.withDescription("Unable to retrieve the battery status.").withCause(e).asRuntimeException());
+        }
     }
     
     /**
@@ -131,7 +153,11 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
                                 }
 
                             } catch (InterruptedException e) {
-                                System.out.println("Battery monitoring stopped.");
+                                // Restore the interrupted status.
+                                Thread.currentThread().interrupt();
+
+                                // Remote error handling - return a CANCELLED gRPC status.
+                                responseObserver.onError(io.grpc.Status.CANCELLED.withDescription("Battery monitoring was interrupted.").withCause(e).asRuntimeException());
                             }
                         });
 
@@ -161,7 +187,8 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
                         responseObserver.onCompleted();
                         break;
                     default:
-                        responseObserver.onNext(BatteryMonitoringResponse.newBuilder().setMessage("Unknown command. Please try again.").build());;
+                        // Remote error handling - return an INVALID_ARGUMENT gRPC error.
+                        responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT.withDescription("Unknown battery command.").asRuntimeException());                       
                         break;
                 }
             }
@@ -172,7 +199,8 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
                     monitoringThread.interrupt();
                 }
 
-                System.err.println("Monitoring interrupted: " + t.getMessage());
+                // Remote error handling - return an INTERNAL gRPC error to the client.
+                responseObserver.onError(io.grpc.Status.INTERNAL.withDescription("Battery monitoring failed.").withCause(t).asRuntimeException());
             }
 
             @Override

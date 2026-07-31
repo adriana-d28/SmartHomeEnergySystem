@@ -21,6 +21,7 @@ import java.util.Iterator;
 import io.grpc.stub.StreamObserver;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import io.grpc.StatusRuntimeException;
 
 /**
  *
@@ -35,7 +36,7 @@ public class SmartHomeGUI extends javax.swing.JFrame {
     // Internal client responsible for communicating with the Battery Storage Service.
     private final BatteryGrpcClient batteryClient;
     // Internal client responsible for communicating with Smart Meter Service.
-    private SmartMeterGrpcClient smartMeterClient;
+    private final SmartMeterGrpcClient smartMeterClient;
     
     /**
      * Creates new form MainGUI
@@ -389,9 +390,9 @@ public class SmartHomeGUI extends javax.swing.JFrame {
                     .addGroup(smartMeterTabLayout.createSequentialGroup()
                         .addComponent(uploadReadingsLbl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(deviceNameLbl)
-                            .addComponent(deviceNameLbl1))
+                        .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(deviceNameLbl1, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(deviceNameLbl))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(smartMeterTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(smartMeterTabLayout.createSequentialGroup()
@@ -408,8 +409,6 @@ public class SmartHomeGUI extends javax.swing.JFrame {
                     .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(30, Short.MAX_VALUE))
         );
-
-        smartMeterLabel1.getAccessibleContext().setAccessibleName("Smart Meter Service");
 
         tabbedPane.addTab("Smart Meter", smartMeterTab);
 
@@ -459,10 +458,10 @@ public class SmartHomeGUI extends javax.swing.JFrame {
             // Display the formatted result.
             txtSolarResults.setText(result);
 
-        } catch (Exception e) {
+        } catch (StatusRuntimeException e) {
 
             // Display the error message if the RPC invocation fails.
-            txtSolarResults.setText("Unable to retrieve the current production.\n\n" + e.getMessage());
+            txtSolarResults.setText(formatGrpcError(e));
         }
     }//GEN-LAST:event_btnGetProductionActionPerformed
 
@@ -491,50 +490,59 @@ public class SmartHomeGUI extends javax.swing.JFrame {
             txtSolarResults.setText("");
             // Display a status message.
             txtSolarResults.append("Monitoring started...\n\n");
-            // Start the Server Streaming RPC.
-            solarClient.monitorProduction(panelId, new StreamObserver<ProductionInfo>() {
+            
+            try{
+            
+                // Start the Server Streaming RPC.
+                solarClient.monitorProduction(panelId, new StreamObserver<ProductionInfo>() {
 
-                @Override
-                public void onNext(ProductionInfo productionInfo) {
+                    @Override
+                    public void onNext(ProductionInfo productionInfo) {
 
-                    // Update the GUI on the Swing Event Dispatch Thread.
-                    SwingUtilities.invokeLater(() -> {
+                        // Update the GUI on the Swing Event Dispatch Thread.
+                        SwingUtilities.invokeLater(() -> {
 
-                        txtSolarResults.append(
-                                "Timestamp: " + productionInfo.getTimestamp() + "\n"
-                                + "Current Production: " + productionInfo.getCurrentProduction() + " " + productionInfo.getUnit() + "\n\n");
-                    });
-                }
+                            txtSolarResults.append(
+                                    "Timestamp: " + productionInfo.getTimestamp() + "\n"
+                                    + "Current Production: " + productionInfo.getCurrentProduction() + " " + productionInfo.getUnit() + "\n\n");
+                        });
+                    }
 
-                @Override
-                public void onError(Throwable throwable) {
+                    @Override
+                    public void onError(Throwable throwable) {
 
-                    // Update the GUI on the Swing Event Dispatch Thread.
-                    SwingUtilities.invokeLater(() -> {
+                        // Update the GUI on the Swing Event Dispatch Thread.
+                        SwingUtilities.invokeLater(() -> {
 
-                        txtSolarResults.append("Monitoring stopped.\n" + throwable.getMessage() + "\n");
+                            txtSolarResults.append("Monitoring stopped.\n\n" + formatGrpcError((StatusRuntimeException) throwable) + "\n");
 
-                        // Restore the ToggleButton.
-                        btnMonitorProduction.setSelected(false);
-                        btnMonitorProduction.setText("Monitor Production");
-                    });
-                }
+                            // Restore the ToggleButton.
+                            btnMonitorProduction.setSelected(false);
+                            btnMonitorProduction.setText("Monitor Production");
+                        });
+                    }
 
-                @Override
-                public void onCompleted() {
+                    @Override
+                    public void onCompleted() {
 
-                    // Update the GUI on the Swing Event Dispatch Thread.
-                    SwingUtilities.invokeLater(() -> {
+                        // Update the GUI on the Swing Event Dispatch Thread.
+                        SwingUtilities.invokeLater(() -> {
 
-                        txtSolarResults.append("Monitoring completed.\n");
+                            txtSolarResults.append("Monitoring completed.\n");
 
-                        // Restore the ToggleButton.
-                        btnMonitorProduction.setSelected(false);
-                        btnMonitorProduction.setText("Monitor Production");
+                            // Restore the ToggleButton.
+                            btnMonitorProduction.setSelected(false);
+                            btnMonitorProduction.setText("Monitor Production");
 
-                    });
-                }
-            });
+                        });
+                    }
+                });
+            } catch (StatusRuntimeException e){
+                
+                txtSolarResults.setText(formatGrpcError(e));
+                btnMonitorProduction.setSelected(false);
+                btnMonitorProduction.setText("Monitor Production");
+            }
             
         } else {
 
@@ -582,10 +590,10 @@ public class SmartHomeGUI extends javax.swing.JFrame {
             // Display the formatted result.
             txtBatteryResults.setText(result);
 
-        } catch (Exception e) {
+        } catch (StatusRuntimeException e) {
 
             // Display the error message if the RPC invocation fails.
-            txtBatteryResults.setText("Unable to retrieve the battery status.\n\n" + e.getMessage());
+            txtBatteryResults.setText(formatGrpcError(e));
         }
     }//GEN-LAST:event_btnGetBatteryStatusActionPerformed
 
@@ -610,78 +618,87 @@ public class SmartHomeGUI extends javax.swing.JFrame {
 
             // Update the ToggleButton text.
             tglMonitorBattery.setText("Stop Monitoring");
-
             // Clear previous results.
             txtBatteryResults.setText("");
-
             // Display a status message.
             txtBatteryResults.append("Monitoring started...\n\n");
-
             // Enable the battery mode controls.
             rbNormalMode.setEnabled(true);
             rbEcoMode.setEnabled(true);
             rbPerformanceMode.setEnabled(true);
-
             // Select the default battery mode.
             rbNormalMode.setSelected(true);
 
-            // Start the Bidirectional Streaming RPC.
-            batteryClient.monitorBatteryStatus(batteryId, new StreamObserver<BatteryMonitoringResponse>() {
+            try{
+            
+                // Start the Bidirectional Streaming RPC.
+                batteryClient.monitorBatteryStatus(batteryId, new StreamObserver<BatteryMonitoringResponse>() {
 
-                @Override
-                public void onNext(BatteryMonitoringResponse response) {
+                    @Override
+                    public void onNext(BatteryMonitoringResponse response) {
 
-                    // Update the GUI on the Swing Event Dispatch Thread.
-                    SwingUtilities.invokeLater(() -> {
-                        BatteryStatusInfo batteryInfo = response.getBatteryInfo();
+                        // Update the GUI on the Swing Event Dispatch Thread.
+                        SwingUtilities.invokeLater(() -> {
+                            BatteryStatusInfo batteryInfo = response.getBatteryInfo();
 
-                        txtBatteryResults.append(
-                                "Battery ID: " + batteryInfo.getBatteryId() + "\n"
-                                + "Battery Level: " + batteryInfo.getBatteryLevel() + "%\n"
-                                + "Charging Status: " + batteryInfo.getChargingStatus() + "\n"
-                                + "Current Mode: " + batteryInfo.getCurrentMode() + "\n"
-                                + "Estimated Time Remaining: "
-                                + response.getEstimatedTimeRemaining() + "\n"
-                                + "Message: " + response.getMessage() + "\n\n");
-                    });
-                }
+                            txtBatteryResults.append(
+                                    "Battery ID: " + batteryInfo.getBatteryId() + "\n"
+                                    + "Battery Level: " + batteryInfo.getBatteryLevel() + "%\n"
+                                    + "Charging Status: " + batteryInfo.getChargingStatus() + "\n"
+                                    + "Current Mode: " + batteryInfo.getCurrentMode() + "\n"
+                                    + "Estimated Time Remaining: "
+                                    + response.getEstimatedTimeRemaining() + "\n"
+                                    + "Message: " + response.getMessage() + "\n\n");
+                        });
+                    }
 
-                @Override
-                public void onError(Throwable throwable) {
+                    @Override
+                    public void onError(Throwable throwable) {
 
-                    // Update the GUI on the Swing Event Dispatch Thread.
-                    SwingUtilities.invokeLater(() -> {
-                        txtBatteryResults.append("Monitoring stopped.\n" + throwable.getMessage() + "\n");
+                        // Update the GUI on the Swing Event Dispatch Thread.
+                        SwingUtilities.invokeLater(() -> {
+                            txtBatteryResults.append("Monitoring stopped.\n" + formatGrpcError((StatusRuntimeException) throwable) + "\n");
 
-                        // Restore the ToggleButton.
-                        tglMonitorBattery.setSelected(false);
-                        tglMonitorBattery.setText("Start Monitoring Battery");
+                            // Restore the ToggleButton.
+                            tglMonitorBattery.setSelected(false);
+                            tglMonitorBattery.setText("Start Monitoring Battery");
 
-                        // Disable the battery mode controls.
-                        rbNormalMode.setEnabled(false);
-                        rbEcoMode.setEnabled(false);
-                        rbPerformanceMode.setEnabled(false);
-                    });
-                }
+                            // Disable the battery mode controls.
+                            rbNormalMode.setEnabled(false);
+                            rbEcoMode.setEnabled(false);
+                            rbPerformanceMode.setEnabled(false);
+                        });
+                    }
 
-                @Override
-                public void onCompleted() {
+                    @Override
+                    public void onCompleted() {
 
-                    // Update the GUI on the Swing Event Dispatch Thread.
-                    SwingUtilities.invokeLater(() -> {
-                        txtBatteryResults.append("Monitoring completed.\n");
+                        // Update the GUI on the Swing Event Dispatch Thread.
+                        SwingUtilities.invokeLater(() -> {
+                            txtBatteryResults.append("Monitoring completed.\n");
 
-                        // Restore the ToggleButton.
-                        tglMonitorBattery.setSelected(false);
-                        tglMonitorBattery.setText("Start Monitoring Battery");
+                            // Restore the ToggleButton.
+                            tglMonitorBattery.setSelected(false);
+                            tglMonitorBattery.setText("Start Monitoring Battery");
 
-                        // Disable the battery mode controls.
-                        rbNormalMode.setEnabled(false);
-                        rbEcoMode.setEnabled(false);
-                        rbPerformanceMode.setEnabled(false);
-                    });
-                }
-            });
+                            // Disable the battery mode controls.
+                            rbNormalMode.setEnabled(false);
+                            rbEcoMode.setEnabled(false);
+                            rbPerformanceMode.setEnabled(false);
+                        });
+                    }
+                });
+            } catch (StatusRuntimeException e) {
+                
+                txtBatteryResults.setText(formatGrpcError(e));
+
+                tglMonitorBattery.setSelected(false);
+                tglMonitorBattery.setText("Start Monitoring Battery");
+
+                rbNormalMode.setEnabled(false);
+                rbEcoMode.setEnabled(false);
+                rbPerformanceMode.setEnabled(false);
+            }
 
         } else {
 
@@ -740,32 +757,38 @@ public class SmartHomeGUI extends javax.swing.JFrame {
 
         // Clear previous report results.
         energyReportTxt.setText("");
+        
+        try{
 
-        // Request the energy report.
-        smartMeterClient.generateEnergyReport(houseId, new StreamObserver<ReportEntry>() {
+            // Request the energy report.
+            smartMeterClient.generateEnergyReport(houseId, new StreamObserver<ReportEntry>() {
 
-            @Override
-            public void onNext(ReportEntry entry) {
-                SwingUtilities.invokeLater(() -> {
-                    energyReportTxt.append(entry.getSection() + "\n" + entry.getValue() + "\n" + entry.getDescription() + "\n\n");
-                });
-            }
+                @Override
+                public void onNext(ReportEntry entry) {
+                    SwingUtilities.invokeLater(() -> {
+                        energyReportTxt.append(entry.getSection() + "\n" + entry.getValue() + "\n" + entry.getDescription() + "\n\n");
+                    });
+                }
 
-            @Override
-            public void onError(Throwable t) {
+                @Override
+                public void onError(Throwable throwable) {
 
-                SwingUtilities.invokeLater(() -> {
-                    JOptionPane.showMessageDialog(null, "Error while receiving the energy report.",  "gRPC Error", JOptionPane.ERROR_MESSAGE);
-                });
-            }
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(null, formatGrpcError((StatusRuntimeException) throwable),  "gRPC Error", JOptionPane.ERROR_MESSAGE);
+                    });
+                }
 
-            @Override
-            public void onCompleted() {
+                @Override
+                public void onCompleted() {
 
-                System.out.println("Energy report completed.");
+                    System.out.println("Energy report completed.");
 
-            }
-        });
+                }
+            });
+        } catch (StatusRuntimeException e) {
+            
+            JOptionPane.showMessageDialog(this, formatGrpcError(e), "gRPC Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnEnergyReportActionPerformed
 
     private void sendReadingBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendReadingBtnActionPerformed
@@ -779,61 +802,69 @@ public class SmartHomeGUI extends javax.swing.JFrame {
 
         // Clear the previous summary.
         readingResultTxt.setText("");
-        // Create the response observer.
-        StreamObserver<ConsumptionSummary> responseObserver = new StreamObserver<ConsumptionSummary>() {
+        
+        try{
+        
+            // Create the response observer.
+            StreamObserver<ConsumptionSummary> responseObserver = new StreamObserver<ConsumptionSummary>() {
 
-            @Override
-            public void onNext(ConsumptionSummary summary) {
+                @Override
+                public void onNext(ConsumptionSummary summary) {
 
-                SwingUtilities.invokeLater(() -> {
+                    SwingUtilities.invokeLater(() -> {
 
-                    readingResultTxt.append("Highest Consumer: " + summary.getHighestConsumer() + "\n");
-                    readingResultTxt.append("Highest Consumption: " + summary.getHighestConsumption() + " Wh\n");
-                    readingResultTxt.append("Total Consumption: " + summary.getTotalConsumption() + " Wh\n");
-                    readingResultTxt.append("Average Consumption: " + String.format("%.2f", summary.getAverageConsumption()) + " Wh\n");
+                        readingResultTxt.append("Highest Consumer: " + summary.getHighestConsumer() + "\n");
+                        readingResultTxt.append("Highest Consumption: " + summary.getHighestConsumption() + " Wh\n");
+                        readingResultTxt.append("Total Consumption: " + summary.getTotalConsumption() + " Wh\n");
+                        readingResultTxt.append("Average Consumption: " + String.format("%.2f", summary.getAverageConsumption()) + " Wh\n");
 
-                });
+                    });
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+
+                    SwingUtilities.invokeLater(() -> {
+
+                        JOptionPane.showMessageDialog(null, formatGrpcError((StatusRuntimeException) throwable), "gRPC Error", JOptionPane.ERROR_MESSAGE);
+
+                    });
+                }
+
+                @Override
+                public void onCompleted() {
+
+                    System.out.println("Consumption readings successfully processed.");
+
+                }
+            };
+
+            // Start the Client Streaming RPC.
+            StreamObserver<ConsumptionReading> requestObserver = smartMeterClient.uploadConsumptionReadings(responseObserver);
+
+            // Split all stored readings.
+            String[] readings = addedReadingTxt.getText().split("\n");
+
+            // Send each reading to the server.
+            for (String reading : readings) {
+
+                if (reading.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] parts = reading.split(" - ");
+                ConsumptionReading request = ConsumptionReading.newBuilder().setDevice(parts[0]).setConsumption(Integer.parseInt(parts[1].replace(" Wh", ""))).build();
+                requestObserver.onNext(request);
+
             }
 
-            @Override
-            public void onError(Throwable t) {
-
-                SwingUtilities.invokeLater(() -> {
-
-                    JOptionPane.showMessageDialog(null, "Error while sending the consumption readings.", "gRPC Error", JOptionPane.ERROR_MESSAGE);
-
-                });
-            }
-
-            @Override
-            public void onCompleted() {
-
-                System.out.println("Consumption readings successfully processed.");
-
-            }
-        };
-
-        // Start the Client Streaming RPC.
-        StreamObserver<ConsumptionReading> requestObserver = smartMeterClient.uploadConsumptionReadings(responseObserver);
-
-        // Split all stored readings.
-        String[] readings = addedReadingTxt.getText().split("\n");
-
-        // Send each reading to the server.
-        for (String reading : readings) {
-
-            if (reading.trim().isEmpty()) {
-                continue;
-            }
-
-            String[] parts = reading.split(" - ");
-            ConsumptionReading request = ConsumptionReading.newBuilder().setDevice(parts[0]).setConsumption(Integer.parseInt(parts[1].replace(" Wh", ""))).build();
-            requestObserver.onNext(request);
-
+            // Notify the server that all readings have been sent.
+            requestObserver.onCompleted();
+        
+        } catch (StatusRuntimeException e) {
+            JOptionPane.showMessageDialog(this, formatGrpcError(e), "gRPC Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        // Notify the server that all readings have been sent.
-        requestObserver.onCompleted();
+        
         // Clear the readings list.
         addedReadingTxt.setText("");
         // Clear the input fields.
@@ -875,6 +906,20 @@ public class SmartHomeGUI extends javax.swing.JFrame {
         deviceNameTxt.requestFocus();
     }//GEN-LAST:event_addReadingBtnActionPerformed
 
+    /**
+     * Formats a gRPC error into a user-friendly message.
+     *
+     * @param e The gRPC exception received from the server.
+     * @return A formatted error message.
+     */
+    private String formatGrpcError(StatusRuntimeException e) {
+
+        return "Status: "
+                + e.getStatus().getCode()
+                + "\n\n"
+                + e.getStatus().getDescription();
+    }
+    
     /**
      * @param args the command line arguments
      */

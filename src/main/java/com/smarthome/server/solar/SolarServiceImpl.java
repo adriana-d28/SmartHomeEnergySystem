@@ -51,21 +51,35 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
      */
     @Override
     public void getCurrentProduction(GetCurrentProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
-        // test log - remove it
-        System.out.println("Solar Service received a request from another service.");
-        // Update the timestamp to represent the current measurement time.
-        solarData.setTimestamp(LocalDateTime.now());
+        /// Remote error handling treatment - validate the Panel ID received from the client.
+        if (request.getPanelId().isBlank()) {
+
+            // Return an INVALID_ARGUMENT gRPC error to the client.
+            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT.withDescription("Panel ID cannot be empty.").asRuntimeException());
+
+            // Stop the method execution.
+            return;
+        }
         
-        // Create the response message using the Builder pattern: sets the data, the format and build.
-        ProductionInfo response = ProductionInfo.newBuilder().setPanelId(solarData.getPanelId())
-                .setCurrentProduction(solarData.getCurrentProduction()).setUnit(solarData.getUnit()).setTimestamp(
-                solarData.getTimestamp().format(FORMATTER)).build();
+        try {
+        
+            // Update the timestamp to represent the current measurement time.
+            solarData.setTimestamp(LocalDateTime.now());
 
-        // Send the response to the client - due to its unary nature, we only need one.
-        responseObserver.onNext(response);
-        // Finish and close the RPC call.
-        responseObserver.onCompleted();
+            // Create the response message using the Builder pattern: sets the data, the format and build.
+            ProductionInfo response = ProductionInfo.newBuilder().setPanelId(solarData.getPanelId())
+                    .setCurrentProduction(solarData.getCurrentProduction()).setUnit(solarData.getUnit()).setTimestamp(
+                    solarData.getTimestamp().format(FORMATTER)).build();
 
+            // Send the response to the client - due to its unary nature, we only need one.
+            responseObserver.onNext(response);
+            // Finish and close the RPC call.
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            
+            // Return an INTERNAL gRPC error.
+            responseObserver.onError(io.grpc.Status.INTERNAL.withDescription("Unable to retrieve the current production.").withCause(e).asRuntimeException());
+        }
     }
     
      /**
@@ -78,7 +92,7 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
     public void monitorProduction(MonitorProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
         
         try {
-            // Send five production updates - simple version for tests.
+            // Send five production updates - simple version for simulation.
             for (int i = 0; i < 5; i++) {
                 
                 // Stop the stream if the client has cancelled the RPC.
@@ -114,8 +128,9 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
 
             // Restore the interrupted status.
             Thread.currentThread().interrupt();
-            // Notify the client about the error.
-            responseObserver.onError(e);
+            
+            // Remote exception handling - return a CANCELLED gRPC status to the client.
+            responseObserver.onError(io.grpc.Status.CANCELLED.withDescription("Production monitoring was interrupted.").withCause(e).asRuntimeException());
         }
     }
 }

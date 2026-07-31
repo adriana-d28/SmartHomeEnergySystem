@@ -17,6 +17,10 @@ import com.smarthome.integrationclient.BatteryGrpcClient;
 import com.smarthome.solar.ProductionInfo;
 import com.smarthome.battery.BatteryStatusInfo;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.Context;
+
 import java.util.ArrayList;
 import io.grpc.stub.StreamObserver;
 /**
@@ -40,6 +44,7 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
      * through communication with the Solar and Battery services.
      */
     public SmartMeterServiceImpl() {
+        // Default values for simulation purposes
         smartMeterData = new SmartMeterData(
                 // Basic Information
                 "HOUSE001",
@@ -157,65 +162,107 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
     @Override
     public void generateEnergyReport(GenerateEnergyReportRequest request, StreamObserver<ReportEntry> responseObserver) {
         
-        // Calling the method to update the Smart Meter based on information gotten from Solar and Battery Services
-        updateSmartMeterData();
-        
-        // Future validation:
-        // In future versions, the Smart Meter will validate if the requested house exists before generating the report.
-        String requestedHouse = request.getHouseId();
+        // Validate the House ID received from the client.
+        if (request.getHouseId().isBlank()) {
 
-        // Sends the current solar production.
-        responseObserver.onNext(createReportEntry("Current Solar Production",
-                smartMeterData.getCurrentSolarProduction() + " " + smartMeterData.getProductionUnit(),
-                "Current energy produced by the solar panels."
-        ));
-        
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            // Return an INVALID_ARGUMENT gRPC error.
+            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("House ID cannot be empty.").asRuntimeException());
+
+            // Stop the method execution.
+            return;
         }
-
-        // Sends the battery level.
-        responseObserver.onNext(createReportEntry("Battery Level", smartMeterData.getBatteryLevel() + "%",
-                "Current battery charge level."
-        ));
         
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        try{
 
-        // Sends the highest consuming appliance.
-        responseObserver.onNext(createReportEntry("Highest Consumer", smartMeterData.getHighestConsumer(),
-                "Appliance with the highest energy consumption."
-        ));
+            // Calling the method to update the Smart Meter based on information gotten from Solar and Battery Services
+            updateSmartMeterData();
+
+            // Future validation:
+            // In future versions, the Smart Meter will validate if the requested house exists before generating the report.
+            String requestedHouse = request.getHouseId();
+            
+            // Stop the stream if the client has cancelled the RPC.
+            if (Context.current().isCancelled()) {
+                System.out.println("Energy report cancelled by the client.");
+                return;
+            }
+
+            // Sends the current solar production.
+            responseObserver.onNext(createReportEntry("Current Solar Production",
+                    smartMeterData.getCurrentSolarProduction() + " " + smartMeterData.getProductionUnit(),
+                    "Current energy produced by the solar panels."
+            ));
+            
+            Thread.sleep(2000);
+
+            // Stop the stream if the client has cancelled the RPC.
+            if (Context.current().isCancelled()) {
+                System.out.println("Energy report cancelled by the client.");
+                return;
+            }
+
+            // Sends the battery level.
+            responseObserver.onNext(createReportEntry("Battery Level", smartMeterData.getBatteryLevel() + "%",
+                    "Current battery charge level."
+            ));
+            
+            Thread.sleep(2000);
+
+            // Stop the stream if the client has cancelled the RPC.
+            if (Context.current().isCancelled()) {
+                System.out.println("Energy report cancelled by the client.");
+                return;
+            }
+
+            // Sends the highest consuming appliance.
+            responseObserver.onNext(createReportEntry("Highest Consumer", smartMeterData.getHighestConsumer(),
+                    "Appliance with the highest energy consumption."
+            ));
+            
+            Thread.sleep(2000);
+
+            // Stop the stream if the client has cancelled the RPC.
+            if (Context.current().isCancelled()) {
+                System.out.println("Energy report cancelled by the client.");
+                return;
+            }
+
+            // Sends the calculated energy efficiency.
+            responseObserver.onNext(createReportEntry("Energy Efficiency", smartMeterData.getEnergyEfficiency() + "%",
+                    "Overall home energy efficiency."
+            ));
+            
+            Thread.sleep(2000);
+
+            // Stop the stream if the client has cancelled the RPC.
+            if (Context.current().isCancelled()) {
+                System.out.println("Energy report cancelled by the client.");
+                return;
+            }
+
+            // Sends the Smart Meter recommendation.
+            responseObserver.onNext(createReportEntry("Recommendation", smartMeterData.getRecommendation(),
+                    "Recommendation generated by the Smart Meter."
+            ));
+
+            // Indicates that no more report entries will be sent.
+            responseObserver.onCompleted();
+            
+        } catch (StatusRuntimeException e) {
+
+            // Forward the original gRPC error to the client.
+            responseObserver.onError(e);
         
-        try {
-            Thread.sleep(2000);
         } catch (InterruptedException e) {
+
             Thread.currentThread().interrupt();
-        }
-
-        // Sends the calculated energy efficiency.
-        responseObserver.onNext(createReportEntry("Energy Efficiency", smartMeterData.getEnergyEfficiency() + "%",
-                "Overall home energy efficiency."
-        ));
-        
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        // Sends the Smart Meter recommendation.
-        responseObserver.onNext(createReportEntry("Recommendation", smartMeterData.getRecommendation(),
-                "Recommendation generated by the Smart Meter."
-        ));
-
-        // Indicates that no more report entries will be sent.
-        responseObserver.onCompleted();
+            responseObserver.onError(Status.CANCELLED.withDescription("Energy report generation was interrupted.").withCause(e).asRuntimeException());
+            
+        } catch (Exception e) {
+            
+            // Return an INTERNAL gRPC error.
+            responseObserver.onError(Status.INTERNAL.withDescription("Unable to generate the energy report.").withCause(e).asRuntimeException());
+        }         
     }
 
 
@@ -236,19 +283,49 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
 
             @Override
             public void onNext(ConsumptionReading reading) {
+                // Validate the received reading.
+                if (reading.getDevice().isBlank()) {
+
+                    // Return an INVALID_ARGUMENT gRPC error.
+                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Device name cannot be empty.").asRuntimeException());
+
+                    return;
+                }
+                
+                if (reading.getConsumption() < 0) {
+                    
+                    // Return an INVALID_ARGUMENT gRPC error.
+                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Consumption cannot be negative.").asRuntimeException());
+                }
+                
                 // Stores each reading received from the client
                 readings.add(reading);
             }
 
             @Override
             public void onError(Throwable t) {
-                // prints an error message
-                System.err.println("Streaming error: " + t.getMessage());
+                // Forward existing gRPC errors.
+                if (t instanceof StatusRuntimeException) {
+                    responseObserver.onError(t);
+                    return;
+                }
+
+                // Return an INTERNAL gRPC error.
+                responseObserver.onError(Status.INTERNAL.withDescription("Consumption upload failed.").withCause(t).asRuntimeException());
             }
 
             // This method will calculate the response after the client finishes sending information
             @Override
             public void onCompleted() {
+                
+                // Validate whether at least one reading was received.
+                if (readings.isEmpty()) {
+
+                    // Return an INVALID_ARGUMENT gRPC error.
+                    responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("At least one consumption reading is required.").asRuntimeException());
+
+                    return;
+                }
                 
                 int totalConsumption = 0;
                 int highestConsumption = Integer.MIN_VALUE;

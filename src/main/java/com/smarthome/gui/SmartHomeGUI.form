@@ -458,9 +458,9 @@
                           <Group type="102" attributes="0">
                               <Component id="uploadReadingsLbl" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="deviceNameLbl" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="deviceNameLbl1" alignment="1" min="-2" max="-2" attributes="0"/>
+                                  <Component id="deviceNameLbl" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="1" attributes="0">
@@ -494,9 +494,6 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value="Smart Meter Service"/>
               </Properties>
-              <AccessibilityProperties>
-                <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="Smart Meter Service"/>
-              </AccessibilityProperties>
             </Component>
             <Component class="java.awt.Label" name="uploadReadingsLbl">
               <Properties>

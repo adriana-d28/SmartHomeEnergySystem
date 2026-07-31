@@ -62,7 +62,7 @@ public class BatteryGrpcClient {
             // Create the discovery jmDNS instance.
             JmDNSDiscovery discovery = new JmDNSDiscovery();
 
-            // Discover the Solar Service.
+            // Discover the Battery Service.
             ServiceInfo serviceInfo = discovery.discoverService("BatteryService");
 
             // Close the discovery instance.
@@ -78,7 +78,8 @@ public class BatteryGrpcClient {
             
         } catch (IOException e) {
             
-            throw new RuntimeException("Unable to discover the Battery Service.", e);
+            // Return a gRPC UNAVAILABLE error.
+            throw io.grpc.Status.UNAVAILABLE.withDescription("Unable to discover the Battery Service.").withCause(e).asRuntimeException();
         }
     }
     
@@ -122,7 +123,7 @@ public class BatteryGrpcClient {
     // This method retrieves the current battery status from the Battery Service.
     public BatteryStatusInfo getBatteryStatus(String batteryId) {
         
-        // Call the method to connect to the Solar service
+        // Call the method to connect to the Battery service
         connect();
 
         // Create the request.
@@ -156,6 +157,8 @@ public class BatteryGrpcClient {
 
     // Closes the communication channel (it allows the other services to close the communication channel)
     public void shutdown() {
-        channel.shutdown();
+         if (channel != null) {
+            channel.shutdown();
+        }
     }
 }

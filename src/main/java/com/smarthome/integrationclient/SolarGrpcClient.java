@@ -69,7 +69,8 @@ private Context.CancellableContext monitoringContext;
             
         } catch (IOException e) {
             
-            throw new RuntimeException("Unable to discover the Solar Service.", e);
+            // Return a gRPC UNAVAILABLE error.
+            throw io.grpc.Status.UNAVAILABLE.withDescription("Unable to discover the Solar Service.").withCause(e).asRuntimeException();
         }
     }
 
