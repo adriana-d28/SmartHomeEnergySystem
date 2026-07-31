@@ -18,6 +18,11 @@ import com.smarthome.solar.MonitorProductionRequest;
 import io.grpc.stub.StreamObserver;
 import io.grpc.Context;
 
+import com.smarthome.advancedgrpc.GrpcClientInterceptor;
+
+import io.grpc.Channel;
+import io.grpc.ClientInterceptors;
+
 /**
  *
  * @author Adriana Dinelly - ID 25165771
@@ -35,7 +40,7 @@ public class SolarGrpcClient {
     // Asynchronous Stub used to invoke Server Streaming RPCs.
     private SolarPanelServiceGrpc.SolarPanelServiceStub asyncStub;
     // Cancellable context used to stop the monitoring stream.
-private Context.CancellableContext monitoringContext;
+    private Context.CancellableContext monitoringContext;
 
     // Constructor 
     public SolarGrpcClient() {
@@ -63,9 +68,17 @@ private Context.CancellableContext monitoringContext;
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
 
-            // Create the Blocking and Async Stub.
-            stub = SolarPanelServiceGrpc.newBlockingStub(channel);
-            asyncStub = SolarPanelServiceGrpc.newStub(channel);
+            // Create the client interceptor responsible for attaching Metadata.
+            GrpcClientInterceptor interceptor = new GrpcClientInterceptor("SolarGrpcClient");
+
+            // Create a channel that passes through the interceptor before reaching the server.
+            Channel interceptedChannel = ClientInterceptors.intercept(channel, interceptor);
+
+            // Create the Blocking Stub using the intercepted channel.
+            stub = SolarPanelServiceGrpc.newBlockingStub(interceptedChannel);
+
+            // Create the Async Stub using the intercepted channel.
+            asyncStub = SolarPanelServiceGrpc.newStub(interceptedChannel);
             
         } catch (IOException e) {
             

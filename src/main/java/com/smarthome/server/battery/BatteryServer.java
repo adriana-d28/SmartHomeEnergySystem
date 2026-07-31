@@ -10,6 +10,9 @@ import io.grpc.ServerBuilder;
 import java.io.IOException;
 import com.smarthome.discovery.JmDNSRegistration;
 
+import com.smarthome.advancedgrpc.AuthInterceptor;
+import io.grpc.ServerInterceptors;
+
 /**
  *
  * @author Adriana Dinelly - ID 25165771
@@ -54,8 +57,8 @@ public class BatteryServer {
     public void start() throws IOException {
         
         server = ServerBuilder.forPort(PORT)
-                // Registers the service implementation.
-                .addService(new BatteryServiceImpl())
+                // Registers the service implementation using an authentication interceptor.
+                .addService(ServerInterceptors.intercept(new BatteryServiceImpl(), new AuthInterceptor()))
                 // Builds the server.
                 .build()
                 // Starts listening for client connections.

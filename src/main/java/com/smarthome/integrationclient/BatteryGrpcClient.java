@@ -23,6 +23,11 @@ import java.io.IOException;
 import javax.jmdns.ServiceInfo;
 import com.smarthome.discovery.JmDNSDiscovery;
 
+import com.smarthome.advancedgrpc.GrpcClientInterceptor;
+
+import io.grpc.Channel;
+import io.grpc.ClientInterceptors;
+
 /**
  *
  * @author Adriana Dinelly - ID 25165771
@@ -71,10 +76,17 @@ public class BatteryGrpcClient {
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
 
-            // Create the Blocking Stub.
-            stub = BatteryStorageServiceGrpc.newBlockingStub(channel);
-            // Create the Async Stub.
-            asyncStub = BatteryStorageServiceGrpc.newStub(channel);
+            // Create the client interceptor responsible for attaching Metadata.
+            GrpcClientInterceptor interceptor = new GrpcClientInterceptor("BatteryGrpcClient");
+
+            // Create a channel that passes through the interceptor before reaching the server.
+            Channel interceptedChannel = ClientInterceptors.intercept(channel, interceptor);
+
+            // Create the Blocking Stub using the intercepted channel.
+            stub = BatteryStorageServiceGrpc.newBlockingStub(interceptedChannel);
+
+            // Create the Async Stub using the intercepted channel.
+            asyncStub = BatteryStorageServiceGrpc.newStub(interceptedChannel);
             
         } catch (IOException e) {
             

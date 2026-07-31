@@ -21,6 +21,11 @@ import java.util.Iterator;
 
 import javax.jmdns.ServiceInfo;
 
+import com.smarthome.advancedgrpc.GrpcClientInterceptor;
+
+import io.grpc.Channel;
+import io.grpc.ClientInterceptors;
+
 /**
  *
  * @author Adriana Dinelly - ID 25165771
@@ -65,9 +70,17 @@ public class SmartMeterGrpcClient {
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
 
-            // Create the Blocking and Async Stub.
-            stub = SmartMeterServiceGrpc.newBlockingStub(channel);
-            asyncStub = SmartMeterServiceGrpc.newStub(channel);
+            // Create the client interceptor responsible for attaching Metadata.
+            GrpcClientInterceptor interceptor = new GrpcClientInterceptor("SmartMeterGrpcClient");
+
+            // Create a channel that passes through the interceptor before reaching the server.
+            Channel interceptedChannel = ClientInterceptors.intercept(channel, interceptor);
+
+            // Create the Blocking Stub using the intercepted channel.
+            stub = SmartMeterServiceGrpc.newBlockingStub(interceptedChannel);
+
+            // Create the Async Stub using the intercepted channel.
+            asyncStub = SmartMeterServiceGrpc.newStub(interceptedChannel);
 
         } catch (IOException e) {
 
