@@ -40,6 +40,9 @@ public class AuthInterceptor implements ServerInterceptor {
 
         // Read the application version from the Metadata.
         String applicationVersion = headers.get(GrpcConstants.APPLICATION_VERSION_KEY);
+        
+        // Read the JWT from the Metadata.
+        String jwtToken = headers.get(GrpcConstants.AUTHORIZATION_KEY);
 
         // Display the received Metadata.
         System.out.println("------------ Incoming Metadata ------------");
@@ -48,11 +51,36 @@ public class AuthInterceptor implements ServerInterceptor {
         System.out.println("Application Version: " + applicationVersion);
         System.out.println("-------------------------------------------");
 
+        // Check whether the JWT is missing.
+        if (jwtToken == null || jwtToken.isEmpty()) {
+
+            // Reject the request.
+            call.close(io.grpc.Status.UNAUTHENTICATED .withDescription("Missing authentication token."), new Metadata());
+
+            // Stop request processing.
+            return new ServerCall.Listener<ReqT>() {};
+
+        }
+        
+        // Validate the JWT.
+        if (!JwtUtil.validateToken(jwtToken)) {
+
+            // Reject the request.
+            call.close(io.grpc.Status.UNAUTHENTICATED.withDescription("Invalid authentication token."), new Metadata());
+            // Stop request processing.
+            return new ServerCall.Listener<ReqT>() {};
+
+        }
+        
+        // Retrieve the authenticated username.
+        String username = JwtUtil.getUsername(jwtToken);
+
         // Store the client name in the Context.
         Context context = Context.current()
                 .withValue(GrpcConstants.CLIENT_NAME_CONTEXT, clientName)
                 .withValue(GrpcConstants.REQUEST_ID_CONTEXT, requestId)
-                .withValue(GrpcConstants.APPLICATION_VERSION_CONTEXT, applicationVersion);
+                .withValue(GrpcConstants.APPLICATION_VERSION_CONTEXT, applicationVersion)
+                .withValue(GrpcConstants.USERNAME_CONTEXT, username);
 
         // Continue the request using the updated Context.
         return Contexts.interceptCall(context, call, headers, next);

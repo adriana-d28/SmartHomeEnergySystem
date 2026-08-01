@@ -55,5 +55,9 @@ public final class GrpcConstants {
     // Context key used to store the application version.
     public static final Context.Key<String> APPLICATION_VERSION_CONTEXT =
             Context.key("application-version");
+    
+    // Context key used to store the authenticated username.
+    public static final Context.Key<String> USERNAME_CONTEXT =
+            Context.key("username");
 
 }

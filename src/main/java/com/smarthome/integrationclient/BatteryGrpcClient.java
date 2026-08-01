@@ -19,6 +19,7 @@ import io.grpc.stub.StreamObserver;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.jmdns.ServiceInfo;
 import com.smarthome.discovery.JmDNSDiscovery;
@@ -47,6 +48,8 @@ public class BatteryGrpcClient {
     private Context.CancellableContext cancellableContext;
     // Stream used to send requests to the server.
     private StreamObserver<BatteryMonitoringRequest> requestObserver;
+    // Client interceptor responsible for attaching Metadata and JWT.
+    private final GrpcClientInterceptor interceptor = new GrpcClientInterceptor("BatteryGrpcClient");
 
     // Constructor
     public BatteryGrpcClient() {
@@ -75,9 +78,6 @@ public class BatteryGrpcClient {
 
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
-
-            // Create the client interceptor responsible for attaching Metadata.
-            GrpcClientInterceptor interceptor = new GrpcClientInterceptor("BatteryGrpcClient");
 
             // Create a channel that passes through the interceptor before reaching the server.
             Channel interceptedChannel = ClientInterceptors.intercept(channel, interceptor);
@@ -130,6 +130,18 @@ public class BatteryGrpcClient {
         cancellableContext = null;
     }
     
+    /**
+     * Updates the JWT used by this client.
+     *
+     * @param jwtToken JWT generated after authentication.
+     */
+    public void setJwtToken(String jwtToken) {
+
+        // Forward the JWT to the interceptor.
+        interceptor.setJwtToken(jwtToken);
+
+    }
+    
 
     // ======== UNARY METHOD ==========
     // This method retrieves the current battery status from the Battery Service.
@@ -141,7 +153,7 @@ public class BatteryGrpcClient {
         // Create the request.
         GetBatteryStatusRequest request = GetBatteryStatusRequest.newBuilder().setBatteryId(batteryId).build();
         // Invoke the Unary RPC.
-        return stub.getBatteryStatus(request);
+        return stub.withDeadlineAfter(3, TimeUnit.SECONDS).getBatteryStatus(request);
     }
     
     // ========= BIDIRECTIONAL METHOD ===========

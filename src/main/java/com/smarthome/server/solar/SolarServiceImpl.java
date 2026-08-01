@@ -51,7 +51,7 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
      */
     @Override
     public void getCurrentProduction(GetCurrentProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
-        /// Remote error handling treatment - validate the Panel ID received from the client.
+        // Remote error handling treatment - validate the Panel ID received from the client.
         if (request.getPanelId().isBlank()) {
 
             // Return an INVALID_ARGUMENT gRPC error to the client.

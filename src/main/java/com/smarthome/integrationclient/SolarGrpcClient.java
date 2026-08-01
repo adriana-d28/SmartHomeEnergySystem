@@ -11,6 +11,7 @@ import com.smarthome.solar.SolarPanelServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.jmdns.ServiceInfo;
 import com.smarthome.discovery.JmDNSDiscovery;
@@ -41,6 +42,8 @@ public class SolarGrpcClient {
     private SolarPanelServiceGrpc.SolarPanelServiceStub asyncStub;
     // Cancellable context used to stop the monitoring stream.
     private Context.CancellableContext monitoringContext;
+    // Client interceptor responsible for attaching Metadata and JWT.
+    private final GrpcClientInterceptor interceptor = new GrpcClientInterceptor("SolarGrpcClient");
 
     // Constructor 
     public SolarGrpcClient() {
@@ -68,9 +71,6 @@ public class SolarGrpcClient {
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
 
-            // Create the client interceptor responsible for attaching Metadata.
-            GrpcClientInterceptor interceptor = new GrpcClientInterceptor("SolarGrpcClient");
-
             // Create a channel that passes through the interceptor before reaching the server.
             Channel interceptedChannel = ClientInterceptors.intercept(channel, interceptor);
 
@@ -96,7 +96,7 @@ public class SolarGrpcClient {
         // Create the request.
         GetCurrentProductionRequest request = GetCurrentProductionRequest.newBuilder().setPanelId(panelId).build();
         // Invoke the Unary RPC.
-        return stub.getCurrentProduction(request);
+        return stub.withDeadlineAfter(3, TimeUnit.SECONDS).getCurrentProduction(request);
     }
     
     // This method starts the production monitoring stream.
@@ -129,6 +129,18 @@ public class SolarGrpcClient {
             monitoringContext.cancel(null);
             monitoringContext = null;
         }
+    }
+    
+    /**
+     * Updates the JWT used by this client.
+     *
+     * @param jwtToken JWT generated after authentication.
+     */
+    public void setJwtToken(String jwtToken) {
+
+        // Forward the JWT to the interceptor.
+        interceptor.setJwtToken(jwtToken);
+
     }
 
     // Closes the communication channel (this independent method allows the other services to close the communication channel)

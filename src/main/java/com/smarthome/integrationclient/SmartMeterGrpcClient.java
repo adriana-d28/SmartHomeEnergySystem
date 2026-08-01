@@ -11,13 +11,13 @@ import com.smarthome.smartmeter.ConsumptionSummary;
 import com.smarthome.smartmeter.GenerateEnergyReportRequest;
 import com.smarthome.smartmeter.ReportEntry;
 import com.smarthome.smartmeter.SmartMeterServiceGrpc;
+import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import javax.jmdns.ServiceInfo;
 
@@ -44,6 +44,8 @@ public class SmartMeterGrpcClient {
     private SmartMeterServiceGrpc.SmartMeterServiceBlockingStub stub;
     // Asynchronous Stub used to invoke Client Streaming RPCs.
     private SmartMeterServiceGrpc.SmartMeterServiceStub asyncStub;
+    // Client interceptor responsible for attaching Metadata and JWT.
+    private final GrpcClientInterceptor interceptor = new GrpcClientInterceptor("SmartMeterGrpcClient");
 
     // Constructor
     public SmartMeterGrpcClient() {
@@ -69,9 +71,6 @@ public class SmartMeterGrpcClient {
 
             // Create the communication channel.
             channel = ManagedChannelBuilder.forAddress(serviceInfo.getHostAddresses()[0], serviceInfo.getPort()).usePlaintext().build();
-
-            // Create the client interceptor responsible for attaching Metadata.
-            GrpcClientInterceptor interceptor = new GrpcClientInterceptor("SmartMeterGrpcClient");
 
             // Create a channel that passes through the interceptor before reaching the server.
             Channel interceptedChannel = ClientInterceptors.intercept(channel, interceptor);
@@ -100,7 +99,7 @@ public class SmartMeterGrpcClient {
         GenerateEnergyReportRequest request = GenerateEnergyReportRequest.newBuilder().setHouseId(houseId).build();
 
         // Invoke the Server Streaming RPC.
-        asyncStub.generateEnergyReport(request, responseObserver);
+        asyncStub.withDeadlineAfter(3, TimeUnit.SECONDS).generateEnergyReport(request, responseObserver);
     }
 
     // This method starts the Client Streaming communication.
@@ -111,6 +110,18 @@ public class SmartMeterGrpcClient {
 
         // Invoke the Client Streaming RPC.
         return asyncStub.uploadConsumptionReadings(responseObserver);
+    }
+    
+    /**
+     * Updates the JWT used by this client.
+     *
+     * @param jwtToken JWT generated after authentication.
+     */
+    public void setJwtToken(String jwtToken) {
+
+        // Forward the JWT to the interceptor.
+        interceptor.setJwtToken(jwtToken);
+
     }
 
     // Closes the communication channel.

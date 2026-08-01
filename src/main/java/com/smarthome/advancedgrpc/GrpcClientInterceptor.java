@@ -28,6 +28,8 @@ public class GrpcClientInterceptor implements ClientInterceptor {
 
     // Stores the name of the application/service sending the request.
     private final String clientName;
+    // Stores the JWT used to authenticate outgoing requests.
+    private String jwtToken;
 
     /**
      * Constructor.
@@ -38,6 +40,18 @@ public class GrpcClientInterceptor implements ClientInterceptor {
 
         // Store the client name.
         this.clientName = clientName;
+    }
+    
+    /**
+     * Updates the JWT that will be attached to outgoing requests.
+     *
+     * @param jwtToken JWT generated after a successful login.
+     */
+    public void setJwtToken(String jwtToken) {
+
+        // Store the JWT.
+        this.jwtToken = jwtToken;
+
     }
 
     /**
@@ -74,6 +88,12 @@ public class GrpcClientInterceptor implements ClientInterceptor {
                 // Add the application version.
                 headers.put(GrpcConstants.APPLICATION_VERSION_KEY, "1.0");
 
+                // Add the JWT if one is available - it first verifies if the user is authenticated so it can generate the header.
+                if (jwtToken != null && !jwtToken.isEmpty()) {
+                    // Add the JWT token to the metadata 
+                    headers.put(GrpcConstants.AUTHORIZATION_KEY, jwtToken);
+                }
+                
                 // Continue the RPC call normally.
                 super.start(responseListener, headers);
             }
