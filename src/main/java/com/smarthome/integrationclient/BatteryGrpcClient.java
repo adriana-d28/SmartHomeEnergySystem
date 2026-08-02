@@ -153,7 +153,7 @@ public class BatteryGrpcClient {
         // Create the request.
         GetBatteryStatusRequest request = GetBatteryStatusRequest.newBuilder().setBatteryId(batteryId).build();
         // Invoke the Unary RPC.
-        return stub.withDeadlineAfter(3, TimeUnit.SECONDS).getBatteryStatus(request);
+        return stub.withDeadlineAfter(4, TimeUnit.SECONDS).getBatteryStatus(request);
     }
     
     // ========= BIDIRECTIONAL METHOD ===========

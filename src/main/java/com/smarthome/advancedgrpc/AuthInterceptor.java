@@ -44,12 +44,12 @@ public class AuthInterceptor implements ServerInterceptor {
         // Read the JWT from the Metadata.
         String jwtToken = headers.get(GrpcConstants.AUTHORIZATION_KEY);
 
-        // Display the received Metadata.
-        System.out.println("------------ Incoming Metadata ------------");
-        System.out.println("Client Name: " + clientName);
-        System.out.println("Request ID: " + requestId);
-        System.out.println("Application Version: " + applicationVersion);
-        System.out.println("-------------------------------------------");
+        // Display the received Metadata - This was used for testing purposes.
+//        System.out.println("------------ Incoming Metadata ------------");
+//        System.out.println("Client Name: " + clientName);
+//        System.out.println("Request ID: " + requestId);
+//        System.out.println("Application Version: " + applicationVersion);
+//        System.out.println("-------------------------------------------");
 
         // Check whether the JWT is missing.
         if (jwtToken == null || jwtToken.isEmpty()) {

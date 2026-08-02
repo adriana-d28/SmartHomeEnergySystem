@@ -99,7 +99,7 @@ public class SmartMeterGrpcClient {
         GenerateEnergyReportRequest request = GenerateEnergyReportRequest.newBuilder().setHouseId(houseId).build();
 
         // Invoke the Server Streaming RPC.
-        asyncStub.withDeadlineAfter(3, TimeUnit.SECONDS).generateEnergyReport(request, responseObserver);
+        asyncStub.withDeadlineAfter(30, TimeUnit.SECONDS).generateEnergyReport(request, responseObserver);
     }
 
     // This method starts the Client Streaming communication.

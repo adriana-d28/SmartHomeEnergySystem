@@ -19,7 +19,7 @@ import javax.jmdns.ServiceInfo;
  */
 public class JmDNSRegistration {
     // jmDNS instance used to register services.
-    private JmDNS jmdns;
+    private final JmDNS jmdns;
     
     // Service type that will be passed when registering jmDNS instance
     private static final String SERVICE_TYPE = "_grpc._tcp.local.";
@@ -39,7 +39,6 @@ public class JmDNSRegistration {
      * Registers a service on the local network.
      *
      * @param serviceName Name of the service.
-     * @param serviceType Service type (e.g. "_grpc._tcp.local.").
      * @param port Service port.
      * @param description Service description.
      *

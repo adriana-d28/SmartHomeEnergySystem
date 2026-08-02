@@ -47,7 +47,8 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
      * ======== UNARY RPC METHOD =========
      * 
      * Handles Unary requests that retrieve the current production of the solar panel.
-     * 
+     * @param request
+     * @param responseObserver
      */
     @Override
     public void getCurrentProduction(GetCurrentProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {
@@ -87,6 +88,8 @@ public class SolarServiceImpl extends SolarPanelServiceGrpc.SolarPanelServiceImp
      * 
      * Handles Server Streaming requests that continuously send updated solar production values to the client.
      *
+     * @param request
+     * @param responseObserver
      */
     @Override
     public void monitorProduction(MonitorProductionRequest request, StreamObserver<ProductionInfo> responseObserver) {

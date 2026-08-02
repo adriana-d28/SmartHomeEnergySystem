@@ -96,7 +96,7 @@ public class SolarGrpcClient {
         // Create the request.
         GetCurrentProductionRequest request = GetCurrentProductionRequest.newBuilder().setPanelId(panelId).build();
         // Invoke the Unary RPC.
-        return stub.withDeadlineAfter(3, TimeUnit.SECONDS).getCurrentProduction(request);
+        return stub.withDeadlineAfter(2, TimeUnit.SECONDS).getCurrentProduction(request);
     }
     
     // This method starts the production monitoring stream.

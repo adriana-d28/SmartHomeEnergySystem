@@ -9,7 +9,7 @@ import com.smarthome.battery.BatteryStatusInfo;
 import com.smarthome.battery.BatteryStorageServiceGrpc;
 import com.smarthome.battery.ChargingStatus;
 import com.smarthome.battery.GetBatteryStatusRequest;
-import com.smarthome.battery.BatteryCommand;
+import com.smarthome.advancedgrpc.JwtUtil;
 import com.smarthome.battery.BatteryMonitoringRequest;
 import com.smarthome.battery.BatteryMonitoringResponse;
 import com.smarthome.integrationclient.SolarGrpcClient;
@@ -38,6 +38,9 @@ public class BatteryServiceImpl extends BatteryStorageServiceGrpc.BatteryStorage
         batteryData = new BatteryData("BAT001", 75, ChargingStatus.CHARGING, BatteryMode.NORMAL);
             // Create the internal client used to communicate with the Solar Service.
             solarClient = new SolarGrpcClient();
+            // Authenticate this internal client by generating a specific token.
+            solarClient.setJwtToken(
+                    JwtUtil.generateToken("BatteryService"));
     }
 
     // ======= Methods Development =======

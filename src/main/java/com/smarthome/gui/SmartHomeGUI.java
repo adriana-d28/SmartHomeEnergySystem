@@ -16,8 +16,6 @@ import com.smarthome.smartmeter.ReportEntry;
 import com.smarthome.smartmeter.ConsumptionReading;
 import com.smarthome.smartmeter.ConsumptionSummary;
 
-import java.util.Iterator;
-
 import io.grpc.stub.StreamObserver;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -25,7 +23,7 @@ import io.grpc.StatusRuntimeException;
 
 /**
  *
- * @author Adriana
+ * @author Adriana Dinelly - ID 25165771
  */
 public class SmartHomeGUI extends javax.swing.JFrame {
     
@@ -757,6 +755,9 @@ public class SmartHomeGUI extends javax.swing.JFrame {
 
         // Clear previous report results.
         energyReportTxt.setText("");
+        // Show friendly message to the user
+        energyReportTxt.setText("Generating energy report. Please, wait...\n\n");
+        
         
         try{
 

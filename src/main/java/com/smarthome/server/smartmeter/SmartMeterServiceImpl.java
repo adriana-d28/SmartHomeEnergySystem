@@ -13,6 +13,7 @@ import com.smarthome.smartmeter.ReportEntry;
 import com.smarthome.smartmeter.SmartMeterServiceGrpc;
 import com.smarthome.integrationclient.SolarGrpcClient;
 import com.smarthome.integrationclient.BatteryGrpcClient;
+import com.smarthome.advancedgrpc.JwtUtil;
 
 import com.smarthome.solar.ProductionInfo;
 import com.smarthome.battery.BatteryStatusInfo;
@@ -40,8 +41,7 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
 
     /**
      * This constructor creates the service with sample data.
-     * The values are temporary and will later be updated
-     * through communication with the Solar and Battery services.
+     * 
      */
     public SmartMeterServiceImpl() {
         // Default values for simulation purposes
@@ -66,7 +66,14 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
         );
         
         solarClient = new SolarGrpcClient();
+        // Generate a specific token for solarClient
+        solarClient.setJwtToken(
+        JwtUtil.generateToken("SmartMeterService"));
+        
         batteryClient = new BatteryGrpcClient();
+        // Generate a specific token for batteryClient
+        batteryClient.setJwtToken(
+        JwtUtil.generateToken("SmartMeterService"));
     }
 
     // ============ METHODS DEVELOPMENT ============
@@ -176,10 +183,6 @@ public class SmartMeterServiceImpl extends SmartMeterServiceGrpc.SmartMeterServi
 
             // Calling the method to update the Smart Meter based on information gotten from Solar and Battery Services
             updateSmartMeterData();
-
-            // Future validation:
-            // In future versions, the Smart Meter will validate if the requested house exists before generating the report.
-            String requestedHouse = request.getHouseId();
             
             // Stop the stream if the client has cancelled the RPC.
             if (Context.current().isCancelled()) {
